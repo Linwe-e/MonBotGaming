@@ -1,0 +1,23 @@
+{
+  "templates": {
+    "user": {
+      "user_id": "123456789012345678",
+      "username": "ExampleGamer",
+      "join_date": "2024-01-01T00:00:00Z",
+      "level": 1,
+      "experience": 0,
+      "gaming_stats": {
+        "favorite_games": ["Game1", "Game2"],
+        "playtime_hours": 0,
+        "achievements": []
+      },
+      "preferences": {
+        "notifications": true,
+        "public_profile": false
+      }
+    }
+  },
+  "users": {
+    "_comment": "Ce fichier sera auto-généré. Les vraies données membres ne sont pas versionnées pour protéger leur vie privée."
+  }
+}

@@ -1,0 +1,93 @@
+# 🔒 Secrets et configuration
+.env
+*.env
+.env.*
+
+# 🤖 Instructions développement
+.github/instructions/
+*.instructions.md
+
+# 🐍 Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 🔧 Environnements virtuels
+.env/
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# 📝 IDE et éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 🗂️ Systèmes d'exploitation
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 📊 Logs et bases de données temporaires
+*.log
+*.sqlite
+*.db
+
+# 🛡️ Données membres sensibles (confidentialité RGPD)
+data/builds.json
+data/users.json
+data/events.json
+data/*_backup.json
+data/*_temp.json
+data/*_test.json
+
+# 🧪 Tests et cache
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+tests/__pycache__/
+tests/*.pyc
+tests/temp_test_data/
+
+# 📁 Archives et sauvegardes
+archive/
+backup/
+*.backup
+*.old
+
+# 🎮 Fichiers gaming temporaires
+*.temp.json
+*_cache.json
+user_sessions/
+temp_events/
+bot_logs/

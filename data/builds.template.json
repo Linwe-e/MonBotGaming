@@ -1,0 +1,31 @@
+{
+  "templates": {
+    "build": {
+      "build_id": "example-build-001",
+      "user_id": "123456789012345678",
+      "game": "ExampleGame",
+      "build_name": "Example Meta Build",
+      "description": "Description détaillée du build",
+      "tags": ["meta", "endgame", "pve"],
+      "components": {
+        "weapon": "Example Weapon",
+        "armor": "Example Armor Set",
+        "accessories": ["Ring1", "Ring2"],
+        "skills": ["Skill1", "Skill2", "Skill3"]
+      },
+      "stats": {
+        "damage": 1000,
+        "defense": 500,
+        "speed": 100
+      },
+      "created_date": "2024-01-01T00:00:00Z",
+      "updated_date": "2024-01-01T00:00:00Z",
+      "rating": 4.5,
+      "votes": 10,
+      "public": true
+    }
+  },
+  "builds": {
+    "_comment": "Ce fichier sera auto-généré. Les vrais builds membres ne sont pas versionnés pour protéger leur vie privée."
+  }
+}
