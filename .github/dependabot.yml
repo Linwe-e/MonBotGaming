@@ -1,0 +1,41 @@
+# Configuration Dependabot pour MonBotGaming
+# Empêche les mises à jour trop agressives qui pourraient casser le bot
+
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "monthly"  # Moins fréquent que weekly
+    
+    # Ignorer les mises à jour majeures d'aiohttp (problématiques avec discord.py)
+    ignore:
+      - dependency-name: "aiohttp"
+        update-types: ["version-update:semver-major"]
+      
+      # Être prudent avec discord.py (updates manuelles recommandées)
+      - dependency-name: "discord.py"
+        update-types: ["version-update:semver-major"]
+    
+    # Grouper les mises à jour pour éviter trop de PRs
+    groups:
+      security-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "security"
+      
+      minor-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "version-update:semver-minor"
+          - "version-update:semver-patch"
+    
+    # Limiter le nombre de PRs ouvertes
+    open-pull-requests-limit: 3
+    
+    # Messages personnalisés
+    commit-message:
+      prefix: "🔧"
+      include: "scope"
