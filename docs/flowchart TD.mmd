@@ -1,0 +1,51 @@
+flowchart TD
+    A[📁 VPS Setup Script] --> B{🔍 Vérifications Système}
+    B --> C[🐍 Installation Python 3.11]
+    B --> D[👤 Création Utilisateur botgaming]
+    B --> E[🔒 Configuration Sécurité]
+    
+    C --> F[📥 Clone Repository]
+    D --> F
+    E --> F
+    
+    F --> G[⚙️ Environnement Virtuel]
+    G --> H[📚 Installation Dépendances]
+    H --> I[📝 Configuration .env]
+    
+    I --> J[🔧 Service Systemd]
+    J --> K[📊 Monitoring Setup]
+    K --> L[💾 Système Backup]
+    L --> M[🌐 Configuration Nginx]
+    
+    M --> N[✅ Bot Prêt !]
+    
+    %% Sécurité
+    E --> E1[🔥 Firewall UFW]
+    E --> E2[🚫 Fail2Ban]
+    E --> E3[🔐 Permissions Fichiers]
+    
+    %% Monitoring
+    K --> K1[📝 Log Rotation]
+    K --> K2[🏥 Health Check Script]
+    K --> K3[⚡ Quick Commands]
+    
+    %% Backup
+    L --> L1[🕒 Cron Quotidien]
+    L --> L2[🗂️ Retention 7 jours]
+    L --> L3[📦 Archive tar.gz]
+    
+    %% Gaming Features
+    N --> G1[🎮 Builds System]
+    N --> G2[📅 Events Manager]
+    N --> G3[🤖 AI Gaming]
+    N --> G4[👥 Community Tools]
+    
+    style A fill:#e1f5fe
+    style N fill:#c8e6c9
+    style E fill:#ffcdd2
+    style K fill:#fff3e0
+    style L fill:#f3e5f5
+    style G1 fill:#e8f5e8
+    style G2 fill:#e8f5e8
+    style G3 fill:#e8f5e8
+    style G4 fill:#e8f5e8

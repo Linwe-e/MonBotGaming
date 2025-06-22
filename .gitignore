@@ -3,6 +3,21 @@
 *.env
 .env.*
 
+# 🔐 Clés SSH et sécurité VPS
+keys/
+*.ppk
+*.pub
+*.pem
+*_private*
+*_public*
+
+# 📋 Docs sensibles et spécifiques VPS
+docs/VPS_COMMANDES_AZERTY.md
+docs/PUTTY_*
+docs/SESSION_VPS_*.md
+scripts/*ssh*
+SESSION_RECAP_*.md
+
 # 🔐 Données RGPD et chiffrement
 data/conversation_memory_encrypted.json
 data/user_consents.json
@@ -103,3 +118,20 @@ backup/
 user_sessions/
 temp_events/
 bot_logs/
+
+# 🔑 Clés SSH et VPS (sécurité)
+keys/
+*.ppk
+*.pub
+*.pem
+*.key
+*.crt
+ssh_keys/
+*_private_key*
+*_public_key*
+
+# 🖥️ Configuration VPS spécifique
+scripts/vps_config.sh
+scripts/*_personal.sh
+vps_credentials.txt
+server_info.txt
