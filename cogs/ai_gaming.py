@@ -346,14 +346,13 @@ class AIGaming(commands.Cog):
         )
         
         if gemini_ai.is_available():
-            embed.add_field(
-                name="✅ Statut",
+            embed.add_field(                name="✅ Statut",
                 value="Gemini AI connecté et prêt",
                 inline=False
             )
             embed.add_field(
                 name="🔧 Modèle",
-                value="gemini-2.0-flash-exp (Gratuit)",
+                value="gemini-2.0-flash (Gratuit)",
                 inline=True
             )
             embed.add_field(
