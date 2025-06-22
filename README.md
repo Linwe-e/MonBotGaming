@@ -18,12 +18,13 @@ MonBotGaming/
 ├── 📄 config.py            # Configuration centralisée
 ├── 📄 requirements.txt     # Dépendances Python
 ├── 📄 .env                 # Variables secrètes (non versionné)
-├── 📁 cogs/                # Modules fonctionnels (commandes)
+├── � .env.example         # Template configuration
+├── �📁 cogs/                # Modules fonctionnels (commandes)
 │   └── ai_gaming.py        # Module IA gaming hardcore
-├── 📁 data/                # Base de données JSON
-│   ├── builds.json         # Stockage des builds
-│   ├── events.json         # Événements planifiés
-│   └── users.json          # Profils gaming
+├── 📁 data/                # Templates de base de données
+│   ├── builds.template.json    # Template stockage builds
+│   ├── events.template.json    # Template événements 
+│   └── users.template.json     # Template profils gaming
 ├── 📁 utils/               # Utilitaires transversaux
 │   ├── database.py         # Gestion des données JSON
 │   ├── gaming_helpers.py   # Fonctions gaming communes
@@ -31,26 +32,43 @@ MonBotGaming/
 │   └── hardcore_config.py  # Configuration IA avancée
 ├── 📁 docs/                # Documentation
 │   ├── architecture.md     # Schéma visuel du projet
+│   ├── DEVELOPER.md        # Guide développeur
 │   └── SECURITY.md         # Guide de sécurité
 ├── 📁 scripts/             # Outils de développement
 │   ├── init_data.py        # Initialisation des données
-│   └── security_check.py   # Audit de sécurité
-├── 📁 tests/               # Tests unitaires et d'intégration
-│   ├── test_bot_basic.py   # Tests du bot principal
-│   ├── test_ai_methods.py  # Tests des méthodes IA
-│   └── test_hardcore_ai.py # Tests prompts hardcore
-└── 📁 archive/             # Anciennes versions sauvegardées
+│   ├── security_check.py   # Audit de sécurité
+│   ├── show_structure.py   # Affichage structure projet
+│   ├── install.py          # Script d'installation
+│   └── diagnostic.py       # Diagnostic système
+└── 📁 tests/               # Tests unitaires et d'intégration
+    ├── test_bot_basic.py   # Tests du bot principal
+    ├── test_ai_methods.py  # Tests des méthodes IA
+    ├── test_hardcore_ai.py # Tests prompts hardcore
+    ├── test_context_detection.py  # Tests détection contextuelle
+    └── test_intelligent_detection.py  # Tests IA avancée
 ```
 
 ## 🎯 **Jeux Supportés**
 
+### 🔥 **Jeux Principaux**
 - **Diablo I-IV** : Builds optimisés, théorycrafting paragon
 - **Escape from Tarkov** : Loadouts meta, stratégies farming
 - **Helldivers 2** : Compositions d'équipe, stratégies mission
 - **WoW Classic/Retail** : Optimisations DPS, rotations
 - **Baldur's Gate 3** : Builds multiclasse, synergies
 - **Space Marine II** : Configurations Warhammer 40K
-- **LOL, MTG Arena, Sea of Thieves** et plus...
+
+### 🎮 **Catalogue Complet**
+**Action/Aventure :** Space Marine II, Baldur's Gate 3, Enshrouded, Grounded  
+**FPS/Shooter :** Escape from Tarkov, Helldivers 2  
+**MMO/RPG :** WoW Classic, WoW Retail, Diablo I-IV  
+**MOBA/Compétitif :** League of Legends  
+**Coopératif :** Raft, Valheim, Sea of Thieves  
+**Cartes/Stratégie :** MTG Arena, Jeux de cartes  
+**Sport :** Rocket League  
+**Autres :** Karabast, Waven, Un channel JDR dédié
+
+*IA adaptée à plus de 17 jeux avec vocabulaire technique spécialisé*
 
 ## ⚡ **Installation Rapide**
 
@@ -59,7 +77,7 @@ MonBotGaming/
 pip install -r requirements.txt
 ```
 
-2. **Configurer les secrets** dans `.env` :
+2. **Configurer les secrets** dans `.env` (copier depuis `.env.example`) :
 ```env
 DISCORD_TOKEN=ton_token_discord
 GEMINI_API_KEY=ta_cle_gemini_ai
@@ -79,8 +97,10 @@ python main.py
 
 - **Données membres protégées** : Non versionnées, respectent la RGPD
 - **Templates fournis** : Structure visible sans données sensibles  
-- **Auto-initialisation** : Création automatique des fichiers nécessaires
+- **Auto-initialisation** : Création automatique des vrais fichiers JSON
+- **Configuration sécurisée** : `.env.example` fourni, `.env` protégé
 - **Guide de sécurité** : Voir `docs/SECURITY.md`
+- **Audit automatisé** : Script `security_check.py` (score 5/5)
 
 ## 🤖 **Commandes IA Hardcore**
 
@@ -99,6 +119,13 @@ python main.py
 - **Configuration centralisée** 
 - **Gestion d'erreurs** robuste
 
+### 📊 **Statistiques du Projet**
+- **31 fichiers** optimisés et organisés
+- **18 modules Python** fonctionnels
+- **5 tests** unitaires et d'intégration
+- **Score sécurité : 5/5** (audit automatisé)
+- **Architecture modulaire** prête pour l'évolution
+
 ## 🎮 **Philosophie Hardcore**
 
 Ce bot est conçu pour des **gamers expérimentés** qui cherchent :
@@ -111,19 +138,36 @@ Ce bot est conçu pour des **gamers expérimentés** qui cherchent :
 ## 📊 **Évolutions Prévues**
 
 - [ ] Cogs builds par jeu spécifique
-- [ ] Système de classements
-- [ ] Intégration APIs externes (WoWLogs, etc.)
-- [ ] Notifications automatiques
+- [ ] Système de classements communautaires
+- [ ] Intégration APIs externes (WoWLogs, OP.GG, etc.)
+- [ ] Notifications automatiques d'événements
 - [ ] Interface web de gestion
+- [ ] Support de nouveaux jeux gaming
+
+## 🤝 **Contribution**
+
+### Structure de Développement
+- **`docs/DEVELOPER.md`** : Guide complet du développeur
+- **`docs/SECURITY.md`** : Bonnes pratiques de sécurité
+- **`scripts/`** : Outils de développement et diagnostic
+- **Tests automatisés** : Validation continue du code
+
+### Bonnes Pratiques
+- Code modulaire et documenté
+- Tests avant chaque merge
+- Respect RGPD pour les données membres
+- Sécurité par défaut (`.gitignore` robuste)
 
 ## 🧪 **Tests et Validation**
 
 ### Lancer les Tests
 ```bash
 # Tests individuels
-python tests/test_bot_basic.py      # Tests du bot principal
-python tests/test_ai_methods.py     # Tests des méthodes IA
-python tests/test_hardcore_ai.py    # Tests prompts hardcore
+python tests/test_bot_basic.py          # Tests du bot principal
+python tests/test_ai_methods.py         # Tests des méthodes IA
+python tests/test_hardcore_ai.py        # Tests prompts hardcore
+python tests/test_context_detection.py  # Tests détection contextuelle
+python tests/test_intelligent_detection.py  # Tests IA avancée
 
 # Tests complets (si pytest installé)
 pytest tests/ -v
@@ -131,7 +175,14 @@ pytest tests/ -v
 
 ### Validation Sécurité
 ```bash
-python scripts/security_check.py    # Audit complet de sécurité
+python scripts/security_check.py    # Audit complet de sécurité (score 5/5)
+```
+
+### Outils de Développement
+```bash
+python scripts/show_structure.py    # Affichage structure du projet
+python scripts/diagnostic.py        # Diagnostic système complet
+python scripts/install.py          # Installation automatisée
 ```
 
 ---
