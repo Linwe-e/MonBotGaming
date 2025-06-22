@@ -22,10 +22,17 @@ intents.members = True
 
 bot = commands.Bot(command_prefix=BOT_CONFIG['prefix'], intents=intents)
 
+# Charger les cogs
+async def load_cogs():
+    for filename in os.listdir('./cogs'):
+        if filename.endswith('.py'):
+            await bot.load_extension(f'cogs.{filename[:-3]}')
+
 @bot.event
 async def on_ready():
     print(f'🎮 {bot.user} est connecté et prêt à gaming!')
     print(f'📊 Connecté à {len(bot.guilds)} serveur(s)')
+    await load_cogs()
 
 @bot.event
 async def on_message(message):
@@ -50,22 +57,33 @@ async def on_message(message):
                 from utils.gemini_ai import gemini_ai
                 from utils.embed_helpers import create_ai_response_embed, create_gaming_embed
                 from utils.smart_response import SmartResponseManager
-                from utils.conversation_memory import conversation_memory
+                from utils.rgpd_conversation_memory import rgpd_conversation_memory
+                from utils.rgpd_consent_ui import show_consent_request
                 
                 if gemini_ai.is_available():
-                    # Ajouter le message de l'utilisateur à la mémoire
-                    conversation_memory.add_message(message.author.id, content)
+                    # Vérifier le consentement RGPD
+                    has_consent, consent_data = rgpd_conversation_memory.check_user_consent(message.author.id)
+                    
+                    # Si pas de consentement, afficher l'interface avec boutons
+                    if not has_consent:
+                        await show_consent_request(message, bot)
+                        return
+                    
+                    # Ajouter le message de l'utilisateur à la mémoire (si consentement)
+                    rgpd_conversation_memory.add_message(message.author.id, content)
                     
                     # Analyser le contexte pour déterminer le type de réponse
                     use_embed, embed_type = SmartResponseManager.should_use_embed(content)
                     
                     # Récupérer le contexte de conversation
-                    context = conversation_memory.format_context_for_ai(message.author.id)
+                    context_list = rgpd_conversation_memory.get_conversation_context(message.author.id)
+                    context = "\n".join(context_list) if context_list else ""
                     
                     # Générer une réponse adaptée selon le type
                     if not use_embed and any(word in content.lower() for word in ['salut', 'bonjour', 'hello', 'hi']):
                         # Salutation simple
-                        await message.reply(f"Salut {message.author.mention} ! 🎮")
+                        response = f"Salut {message.author.mention} ! 🎮"
+                        await message.reply(response)
                         
                     elif not use_embed:
                         # Question casual → Réponse simple
@@ -104,9 +122,15 @@ async def on_message(message):
                             while remaining:
                                 chunk = remaining[:1900]
                                 remaining = remaining[1900:]
-                                await message.channel.send(f"```{chunk}```")                    
-                    # Sauvegarder la réponse du bot
-                    conversation_memory.add_message(message.author.id, response[:200] + "..." if len(response) > 200 else response, is_bot=True)
+                                await message.channel.send(f"```{chunk}```")
+                    
+                    # Sauvegarder la réponse du bot (si consentement et si response définie)
+                    if 'response' in locals():
+                        rgpd_conversation_memory.add_message(
+                            message.author.id, 
+                            response[:200] + "..." if len(response) > 200 else response, 
+                            is_bot=True
+                        )
                     
                 else:
                     # Simple message d'erreur sans embed pour l'IA indisponible
@@ -119,6 +143,7 @@ async def on_message(message):
                 
         else:
             # Mention sans contenu = salutation simple SANS embed
+            await message.reply(f"🎮 Salut {message.author.mention} ! Besoin d'aide gaming ?")
             await message.reply(f"🎮 Salut {message.author.mention} ! Besoin d'aide gaming ?")
     
     # Traiter les commandes normales
@@ -147,6 +172,12 @@ async def load_cogs():
         print("✅ Module IA Gaming chargé")
     except Exception as e:
         print(f"⚠️ Erreur chargement IA Gaming: {e}")
+    
+    try:
+        await bot.load_extension('cogs.privacy_commands')
+        print("✅ Module Privacy Commands chargé")
+    except Exception as e:
+        print(f"⚠️ Erreur chargement Privacy Commands: {e}")
 
 # Gestion des erreurs
 @bot.event

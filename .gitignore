@@ -3,6 +3,12 @@
 *.env
 .env.*
 
+# 🔐 Données RGPD et chiffrement
+data/conversation_memory_encrypted.json
+data/user_consents.json
+data/.encryption_key
+data/exports/
+
 # 🤖 Instructions développement
 .github/instructions/
 *.instructions.md
