@@ -79,6 +79,12 @@ tests/__pycache__/
 tests/*.pyc
 tests/temp_test_data/
 
+# 🔧 Fichiers de test temporaires (racine)
+test_*.py
+debug_*.py
+temp_*.py
+quick_test.py
+
 # 📁 Archives et sauvegardes
 archive/
 backup/

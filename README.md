@@ -104,11 +104,24 @@ python main.py
 
 ## 🤖 **Commandes IA Hardcore**
 
+### 💬 **Interaction Naturelle (Recommandé)**
+- `@MonBotGaming [question]` - Conversation naturelle avec le bot
+- `@MonBotGaming Comment optimiser mon build Necro Diablo 4 ?`
+- `@MonBotGaming Salut !` - Salutation simple
+- `@MonBotGaming Quelle est la meta Tarkov ?`
+
+### ⌨️ **Commandes Classiques**
 - `!ai ask [question]` - Assistant gaming technique
 - `!ai build [jeu] [description]` - Analyse de builds poussée
 - `!ai team [jeu] [activité] [joueurs]` - Compositions optimales
 - `!ai event [jeu] [type] [détails]` - Événements motivants
 - `!ai status` - Statut de l'IA
+
+### 🎯 **Avantages des Mentions**
+- **Plus naturel** : Parle au bot comme à un ami
+- **Détection contextuelle** : IA adapte sa réponse au ton
+- **Pas de syntaxe** : Juste mentionner et poser ta question
+- **Réponses longues** : Gestion automatique des messages longs
 
 ## 🔧 **Architecture Technique**
 
