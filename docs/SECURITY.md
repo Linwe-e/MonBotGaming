@@ -94,6 +94,42 @@ load_dotenv()
 token = os.getenv('DISCORD_TOKEN')
 ```
 
+## 🛡️ Permissions Discord
+
+### Permissions Bot Requises
+```
+✅ Lire les messages
+✅ Envoyer des messages  
+✅ Intégrer des liens
+✅ Joindre des fichiers
+✅ Utiliser des emojis externes
+✅ Ajouter des réactions
+✅ Gérer les messages (pour les boutons)
+```
+
+### Permissions Sensibles (NON requises)
+```
+❌ Gérer le serveur
+❌ Gérer les rôles
+❌ Gérer les channels
+❌ Mentionner @everyone
+❌ Gérer les webhooks
+```
+
+### Configuration Sécurisée
+```python
+# Exemple de vérification de permissions avant action
+@commands.has_permissions(administrator=True)
+async def admin_command(ctx):
+    # Commande sensible
+    pass
+
+# Vérification des permissions du bot
+if not ctx.guild.me.guild_permissions.embed_links:
+    await ctx.send("⚠️ Permissions insuffisantes")
+    return
+```
+
 ## 💾 Stratégie de Backup
 
 ### Recommandations

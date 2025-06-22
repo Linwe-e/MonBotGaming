@@ -1,5 +1,42 @@
 # 🛠️ Guide Développeur - MonBotGaming
 
+## ⚡ Quick Start
+
+### Installation Rapide
+```bash
+# 1. Cloner et naviguer
+git clone [votre-repo]
+cd MonBotGaming
+
+# 2. Installer les dépendances
+pip install -r requirements.txt
+
+# 3. Configuration
+cp .env.example .env
+# Éditer .env avec vos tokens
+
+# 4. Lancement
+python main.py
+```
+
+### Premiers Tests
+```bash
+# Tester les commandes de base
+!ai ask "Comment ça va ?"
+!privacy info
+
+# Tester un cog spécifique
+!reload cogs.ai_gaming
+```
+
+### Structure Rapide
+- `main.py` = Point d'entrée
+- `cogs/` = Vos commandes Discord
+- `utils/` = Fonctions réutilisables
+- `data/` = Stockage JSON (auto-créé)
+
+---
+
 ## 🏗️ **Architecture du Bot**
 
 ### Structure Modulaire

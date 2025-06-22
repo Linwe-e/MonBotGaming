@@ -35,9 +35,10 @@
 
 1. **Discord Event** → `main.py` 
 2. **Command Detection** → Specific `cog`
-3. **Data Processing** → `utils/` helpers
-4. **Storage** → `data/` JSON files
-5. **Response** → Discord embed/message
+3. **RGPD Consent Check** → `rgpd_consent_ui.py`
+4. **Data Processing** → `utils/` helpers
+5. **Storage** → `data/` JSON files (encrypted)
+6. **Response** → Discord embed/message
 
 ## 🎮 Gaming Logic
 
