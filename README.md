@@ -2,6 +2,18 @@
 
 Bot Discord gaming modulaire et évolutif pour serveurs hardcore, avec IA Gemini intégrée.
 
+## 🙏 **Crédits et Inspiration**
+
+Ce projet s'appuie sur l'excellent travail de **[Rhodham96](https://github.com/Rhodham96)** et son repository **[DiscordBot](https://github.com/Rhodham96/DiscordBot)**.
+
+**MonBotGaming** étend et spécialise cette base solide pour créer une expérience gaming unique, en ajoutant :
+- **IA conversationnelle gaming** avec Gemini 2.0 Flash
+- **Gestion avancée de builds** par jeu
+- **Infrastructure VPS** complète et sécurisée
+- **Modules gaming spécialisés** (17+ jeux supportés)
+
+Merci à Robin pour cette fondation robuste qui a permis de développer rapidement un bot Discord professionnel ! 🎯
+
 ## 🚀 **Fonctionnalités**
 
 - **🤖 Assistant IA Gaming** : Conseils techniques avancés avec Gemini 2.0 Flash
@@ -31,9 +43,10 @@ MonBotGaming/
 │   ├── gemini_ai.py        # Interface IA Gemini hardcore
 │   └── hardcore_config.py  # Configuration IA avancée
 ├── 📁 docs/                # Documentation
-│   ├── architecture.md     # Schéma visuel du projet
-│   ├── DEVELOPER.md        # Guide développeur
-│   └── SECURITY.md         # Guide de sécurité
+│   ├── deployment/         # Guides VPS et déploiement
+│   ├── development/        # Guide développeur
+│   ├── project/            # Architecture et spécifications
+│   └── diagrams/           # Schémas et diagrammes
 ├── 📁 scripts/             # Outils de développement
 │   ├── init_data.py        # Initialisation des données
 │   ├── security_check.py   # Audit de sécurité
@@ -113,7 +126,7 @@ python main.py
 ### ⌨️ **Commandes Classiques**
 - `!ai ask [question]` - Assistant gaming technique
 - `!ai build [jeu] [description]` - Analyse de builds poussée
-- `!ai team [jeu] [activité] [joueurs]` - Compositions optimales
+- `!ai team [jeu] [activité]` - Compositions optimales
 - `!ai event [jeu] [type] [détails]` - Événements motivants
 - `!ai status` - Statut de l'IA
 
@@ -200,4 +213,27 @@ python scripts/install.py          # Installation automatisée
 
 ---
 
+## 👨‍💻 **Contributeurs et Remerciements**
+
+### 🏗️ **Base Technique**
+- **[Rhodham96](https://github.com/Rhodham96)** - Créateur du [DiscordBot](https://github.com/Rhodham96/DiscordBot) de base
+- Structure Discord.py robuste et modulaire
+- Gestion des commandes et événements
+- Architecture extensible et maintenable
+
+### 🎮 **Développement Gaming**
+- **MonBotGaming Team** - Spécialisation gaming et IA
+- Modules cogs gaming avancés
+- Infrastructure VPS et déploiement
+- Intégration Gemini 2.0 Flash
+
+### 📚 **Ressources et Inspirations**
+- Documentation officielle [discord.py](https://discordpy.readthedocs.io/)
+- Communauté Discord.py
+- Google AI Gemini API
+
+---
+
 *Développé avec ❤️ pour la communauté gaming hardcore*
+
+**🔗 Repo original :** [Rhodham96/DiscordBot](https://github.com/Rhodham96/DiscordBot)
