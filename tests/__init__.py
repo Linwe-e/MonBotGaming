@@ -1,19 +1,22 @@
-# Tests pour MonBotGaming
+# Tests pour MonBotGaming - Migration vers pytest
 # Package de tests pour le bot Discord gaming
 
 """
-🧪 Package de tests MonBotGaming
+🧪 Package de tests MonBotGaming (pytest)
 
 Ce package contient tous les tests pour valider le fonctionnement du bot gaming.
 
-Modules disponibles :
-- test_bot_basic : Tests de base du bot Discord
-- test_ai_methods : Tests des méthodes IA Gemini
-- test_hardcore_ai : Tests des prompts hardcore gaming
+Structure pytest :
+- test_core.py : Tests de base du bot Discord et configuration
+- test_ai.py : Tests des fonctionnalités IA et gaming assistant
+- test_rgpd.py : Tests de conformité RGPD et gestion des données
 
-Utilisation :
-    python tests/test_bot_basic.py
-    pytest tests/ -v
+Utilisation avec pytest :
+    pytest tests/ -v                    # Tous les tests
+    pytest tests/test_core.py -v        # Tests core uniquement  
+    pytest -m "ai" -v                   # Tests IA uniquement
+    pytest -m "not slow" -v             # Tests rapides
+    python run_tests.py [type]          # Script helper
 """
 
 import sys
@@ -34,17 +37,12 @@ TEST_CONFIG = {
 }
 
 # Version du package de tests
-__version__ = "1.0.0"
+__version__ = "2.0.0"  # Migration vers pytest
 __author__ = "MonBotGaming Team"
 
 def run_all_tests():
-    """Lance tous les tests du package"""
+    """Lance tous les tests avec pytest (nouvelle méthode)"""
     import subprocess
-    import glob
-    
-    test_files = glob.glob(os.path.join(current_dir, 'test_*.py'))
-    print(f"🧪 Lancement de {len(test_files)} suites de tests...")
-    
-    for test_file in test_files:
-        print(f"\n▶️  Exécution : {os.path.basename(test_file)}")
-        subprocess.run([sys.executable, test_file], cwd=parent_dir)
+    print("🧪 Utilisation de pytest pour les tests...")
+    print("💡 Utilisez: python run_tests.py ou pytest tests/ -v")
+    subprocess.run([sys.executable, '-m', 'pytest', 'tests/', '-v'], cwd=parent_dir)

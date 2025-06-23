@@ -1,7 +1,0 @@
-# 🗑️ Dossier temporaire - Tout est ignoré
-# Ce dossier est destiné aux fichiers de test temporaires
-# Contenu automatiquement ignoré par Git
-
-*
-!.gitignore
-!README.md

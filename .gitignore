@@ -135,3 +135,27 @@ scripts/vps_config.sh
 scripts/*_personal.sh
 vps_credentials.txt
 server_info.txt
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+
+# Secrets
+keys/
+*.json
+!/data/builds.template.json
+!/data/events.template.json
+!/data/users.template.json
+data/conversation_memory_encrypted.json
+data/user_consents.json
+
+# VSCode
+.vscode/
+
+# Ignorer les fichiers de session et de notes personnelles
+docs/personal/
