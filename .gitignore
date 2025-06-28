@@ -103,6 +103,7 @@ ssh_keys/
 
 # 8. Documentation & Notes spécifiques
 # Documents sensibles ou spécifiques à une machine/session.
+notes.txt
 docs/VPS_COMMANDES_AZERTY.md
 docs/PUTTY_*
 docs/SESSION_VPS_*.md

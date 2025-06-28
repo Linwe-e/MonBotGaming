@@ -9,8 +9,8 @@ import os
 # Ajouter utils au path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
 
-from utils.rgpd_conversation_memory import rgpd_conversation_memory
-from utils.embed_helpers import create_gaming_embed
+from utils.data_management.rgpd_conversation_memory import rgpd_conversation_memory
+from utils.discord_helpers.embed_helpers import create_gaming_embed
 
 class PrivacyCommands(commands.Cog):
     """
@@ -24,7 +24,7 @@ class PrivacyCommands(commands.Cog):
     async def privacy_commands(self, ctx):
         """Commandes de confidentialité RGPD - Interface moderne avec boutons"""
         
-        from utils.rgpd_consent_ui import show_privacy_management
+        from utils.discord_helpers.rgpd_consent_ui import show_privacy_management
         
         # Utiliser la nouvelle interface avec boutons
         await show_privacy_management(ctx)

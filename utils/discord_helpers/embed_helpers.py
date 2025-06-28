@@ -20,12 +20,8 @@ def create_ai_response_embed(question, response, context=None):
     question_text = question[:200] + "..." if len(question) > 200 else question
     embed.add_field(name="❓ Question", value=question_text, inline=False)
     
-    # Réponse (limitée à 1000 chars pour l'embed)
-    if len(response) <= 1000:
-        embed.add_field(name="💬 Réponse", value=response, inline=False)
-    else:
-        embed.add_field(name="💬 Réponse", value=response[:1000] + "...", inline=False)
-        embed.add_field(name="📝 Note", value="Réponse tronquée - voir messages suivants", inline=False)
+    # Réponse (laisse la gestion de la longueur à l'appelant)
+    embed.add_field(name="💬 Réponse", value=response, inline=False)
     
     embed.set_footer(text="Powered by Gemini AI • Gaming Assistant", icon_url=None)
     

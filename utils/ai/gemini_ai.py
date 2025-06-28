@@ -180,7 +180,7 @@ class GeminiAI:
         try:
             response = self.model.generate_content(prompt)
             return response.text
-        except Exception as e:
+        except RuntimeError:
             return f"📅 Événement {event_type} pour {game} - {details.get('title', 'Session gaming')}"
 
     # Instance globale

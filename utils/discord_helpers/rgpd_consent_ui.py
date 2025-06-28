@@ -9,8 +9,8 @@ import os
 # Ajouter utils au path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
 
-from utils.rgpd_conversation_memory import rgpd_conversation_memory
-from utils.embed_helpers import create_gaming_embed
+from utils.data_management.rgpd_conversation_memory import rgpd_conversation_memory
+from utils.discord_helpers.embed_helpers import create_gaming_embed
 
 class ConsentView(discord.ui.View):
     """Vue avec boutons pour le consentement RGPD"""

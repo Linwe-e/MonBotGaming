@@ -48,11 +48,11 @@ async def on_message(message):
           # Si il y a du contenu après la mention, traiter comme une question IA
         if content:
             try:
-                from utils.gemini_ai import gemini_ai
-                from utils.embed_helpers import create_ai_response_embed, create_gaming_embed
-                from utils.smart_response import SmartResponseManager
-                from utils.rgpd_conversation_memory import rgpd_conversation_memory
-                from utils.rgpd_consent_ui import show_consent_request
+                from utils.ai.gemini_ai import gemini_ai
+                from utils.discord_helpers.embed_helpers import create_ai_response_embed, create_gaming_embed
+                from utils.ai.smart_response import SmartResponseManager
+                from utils.data_management.rgpd_conversation_memory import rgpd_conversation_memory
+                from utils.discord_helpers.rgpd_consent_ui import show_consent_request
                 
                 if gemini_ai.is_available():
                     # Vérifier le consentement RGPD
@@ -81,7 +81,7 @@ async def on_message(message):
                         
                     elif not use_embed:
                         # Question casual → Réponse simple
-                        response = await gemini_ai.gaming_assistant(content, context=context)
+                        response = await gemini_ai.gaming_assistant(content, game_context=context)
                         
                         # Réponse simple sans embed pour conversations casual
                         if len(response) <= 1500:
@@ -91,7 +91,7 @@ async def on_message(message):
                             
                     elif embed_type == 'light':
                         # Question gaming légère → Embed simple
-                        response = await gemini_ai.gaming_assistant(content, context=context)
+                        response = await gemini_ai.gaming_assistant(content, game_context=context)
                         
                         # Embed léger sans fioritures
                         simple_embed = discord.Embed(
@@ -102,7 +102,7 @@ async def on_message(message):
                         
                     else:
                         # Question gaming technique → Embed complet
-                        response = await gemini_ai.gaming_assistant(content, context=context)
+                        response = await gemini_ai.gaming_assistant(content, game_context=context)
                         
                         # Créer un embed de réponse stylé
                         response_embed = create_ai_response_embed(content, response)
@@ -113,7 +113,8 @@ async def on_message(message):
                             await message.reply(embed=response_embed)
                         else:
                             # Envoyer la première partie dans l'embed
-                            response_embed.description = response[:1000] + "..."
+                            response_embed.description = response[:1000]
+                            response_embed.set_footer(text="Suite de la réponse dans les messages suivants...")
                             await message.reply(embed=response_embed)
 
                             # Envoyer le reste en plusieurs messages si nécessaire
@@ -186,7 +187,7 @@ async def on_command_error(ctx, error):
 if __name__ == "__main__":
     token = os.getenv('DISCORD_TOKEN')
     if not token:
-        print("❌ ERREUR: Token Discord manquant dans le fichier .env!")
+        print("❌ ERREUR: Token Discord manquant ! Assure-toi qu'il est défini dans le fichier .env ou comme variable d'environnement système.")
     else:
         print("🚀 Démarrage du bot...")
         bot.run(token)

@@ -10,9 +10,9 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
 
 from config import GAMES
-from utils.gaming_helpers import gaming_helpers
-from utils.gemini_ai import gemini_ai
-from utils.embed_helpers import create_ai_response_embed, create_gaming_embed, create_help_embed, create_status_embed
+from utils.discord_helpers.gaming_helpers import gaming_helpers
+from utils.ai.gemini_ai import gemini_ai
+from utils.discord_helpers.embed_helpers import create_ai_response_embed, create_gaming_embed, create_help_embed, create_status_embed
 
 class AIGaming(commands.Cog):
     """
