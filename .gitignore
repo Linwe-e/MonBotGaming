@@ -159,3 +159,7 @@ data/user_consents.json
 
 # Ignorer les fichiers de session et de notes personnelles
 docs/personal/
+
+# Fichier de contexte pour l'IA Gemini (local uniquement)
+GEMINI.md
+
