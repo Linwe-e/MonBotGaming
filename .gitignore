@@ -1,47 +1,32 @@
-# 🔒 Secrets et configuration
+# Fichier .gitignore nettoyé et réorganisé
+
+# 1. Secrets & Configuration
+# Fichiers contenant des secrets, des clés API ou des configurations locales.
 .env
 *.env
 .env.*
+vps_credentials.txt
+server_info.txt
+GEMINI.md # Fichier de contexte local pour l'IA
 
-# 🔐 Clés SSH et sécurité VPS
-keys/
-*.ppk
-*.pub
-*.pem
-*_private*
-*_public*
-
-# 📋 Docs sensibles et spécifiques VPS
-docs/VPS_COMMANDES_AZERTY.md
-docs/PUTTY_*
-docs/SESSION_VPS_*.md
-scripts/*ssh*
-SESSION_RECAP_*.md
-
-# 🔐 Données RGPD et chiffrement
-data/conversation_memory_encrypted.json
-data/user_consents.json
-data/.encryption_key
-data/exports/
-
-# 🤖 Instructions développement
-.github/instructions/
-*.instructions.md
-
-# 🐍 Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
+# 2. Dépendances & Environnements virtuels
+# Dossiers de dépendances et d'environnements virtuels Python.
+.env/
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+lib/
+lib64/
+# Fichiers de paquets Python
 build/
 develop-eggs/
 dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
 sdist/
 var/
@@ -53,113 +38,98 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# 🔧 Environnements virtuels
-.env/
-.venv/
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# 3. Données & Fichiers de données
+# Données sensibles, logs, bases de données et exports.
+# Les fichiers .template.json sont versionnés, mais les fichiers de données réels sont ignorés.
+data/builds.json
+data/users.json
+data/events.json
+data/conversation_memory_encrypted.json
+data/user_consents.json
+data/.encryption_key
+data/exports/
+data/*_backup.json
+data/*_temp.json
+data/*_test.json
+# Logs et DBs
+*.log
+*.sqlite
+*.db
 
-# 📝 IDE et éditeurs
+# 4. Cache & Fichiers générés par Python
+# Cache Python, fichiers compilés et autres fichiers générés.
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 5. Tests
+# Cache et rapports de tests.
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+tests/temp_test_data/
+
+# 6. IDE & Fichiers système
+# Configuration des éditeurs de code et fichiers spécifiques à l'OS.
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
-
-# 🗂️ Systèmes d'exploitation
+# macOS
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
+# Windows
 ehthumbs.db
 Thumbs.db
 
-# 📊 Logs et bases de données temporaires
-*.log
-*.sqlite
-*.db
+# 7. Clés & Sécurité
+# Clés SSH, certificats et autres fichiers liés à la sécurité.
+keys/
+ssh_keys/
+*.ppk
+*.pub
+*.pem
+*.key
+*.crt
+*_private*
+*_public*
 
-# 🛡️ Données membres sensibles (confidentialité RGPD)
-data/builds.json
-data/users.json
-data/events.json
-data/*_backup.json
-data/*_temp.json
-data/*_test.json
+# 8. Documentation & Notes spécifiques
+# Documents sensibles ou spécifiques à une machine/session.
+docs/VPS_COMMANDES_AZERTY.md
+docs/PUTTY_*
+docs/SESSION_VPS_*.md
+SESSION_RECAP_*.md
+docs/personal/
+.github/instructions/
+*.instructions.md
 
-# 🧪 Tests et cache
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-tests/__pycache__/
-tests/*.pyc
-tests/temp_test_data/
-
-# 🔧 Fichiers de test temporaires (racine)
+# 9. Scripts & Fichiers temporaires
+# Scripts spécifiques à une machine et fichiers de test temporaires.
+scripts/*ssh*
+scripts/vps_config.sh
+scripts/*_personal.sh
+# Fichiers de test temporaires
 test_*.py
 debug_*.py
 temp_*.py
 quick_test.py
-
-# 📁 Archives et sauvegardes
-archive/
-backup/
-*.backup
-*.old
-
-# 🎮 Fichiers gaming temporaires
+# Fichiers de jeu temporaires
 *.temp.json
 *_cache.json
 user_sessions/
 temp_events/
 bot_logs/
 
-# 🔑 Clés SSH et VPS (sécurité)
-keys/
-*.ppk
-*.pub
-*.pem
-*.key
-*.crt
-ssh_keys/
-*_private_key*
-*_public_key*
-
-# 🖥️ Configuration VPS spécifique
-scripts/vps_config.sh
-scripts/*_personal.sh
-vps_credentials.txt
-server_info.txt
-
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-
-# Secrets
-keys/
-*.json
-!/data/builds.template.json
-!/data/events.template.json
-!/data/users.template.json
-data/conversation_memory_encrypted.json
-data/user_consents.json
-
-# VSCode
-.vscode/
-
-# Ignorer les fichiers de session et de notes personnelles
-docs/personal/
-
-# Fichier de contexte pour l'IA Gemini (local uniquement)
-GEMINI.md
-
+# 10. Archives & Sauvegardes
+archive/
+backup/
+*.backup
+*.old
