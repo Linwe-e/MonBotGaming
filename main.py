@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 # Ajouter le dossier utils au path Python
 sys.path.append(os.path.join(os.path.dirname(__file__), 'utils'))
+sys.path.append(os.path.dirname(__file__))
 
 # Charger les variables secrètes
 load_dotenv()
@@ -13,7 +14,8 @@ load_dotenv()
 # Importer nos configurations et utilitaires
 from config import BOT_CONFIG, GAMES
 from utils.database import db
-from utils.gaming_helpers import gaming_helpers
+print(f"DEBUG: sys.path before gaming_helpers import: {sys.path}")
+from utils.discord_helpers.gaming_helpers import gaming_helpers
 
 # Configuration du bot
 intents = discord.Intents.default()
@@ -100,6 +102,21 @@ async def on_message(message):
                         )
                         await message.reply(embed=simple_embed)
                         
+                    elif embed_type == 'privacy_info':
+                        privacy_response = (
+                            f"Salut {message.author.mention} ! Je suis là pour t'aider avec tes questions gaming. "
+                            "Concernant tes données et ta confidentialité, voici comment je fonctionne:\n\n"
+                            "**Consentement RGPD :** Je ne stocke tes conversations et ton consentement que si tu as explicitement donné ton accord via notre système RGPD. "
+                            "Ceci est fait pour améliorer la pertinence de mes réponses en me souvenant du contexte de nos échanges.\n\n"
+                            "**Données stockées :** Je garde une trace de ton consentement et un historique anonymisé de nos conversations. "
+                            "Je ne stocke aucune information personnelle identifiable (comme ton nom Discord, ton adresse e-mail, etc.). "
+                            "Tes identifiants de jeu ou autres informations sensibles ne sont jamais enregistrés.\n\n"
+                            "**Gestion de tes données :** Tu peux vérifier ton statut de consentement ou demander la suppression de tes données de conversation à tout moment. "
+                            "Utilise les commandes dédiées pour cela (par exemple, `!rgpd status` pour voir ton consentement, ou `!rgpd delete` pour supprimer tes données).\n\n"
+                            "Mon objectif est de t'offrir la meilleure assistance gaming tout en respectant ta vie privée. 🎮"
+                        )
+                        await message.reply(privacy_response)
+
                     else:
                         # Question gaming technique → Embed complet
                         response = await gemini_ai.gaming_assistant(content, game_context=context)

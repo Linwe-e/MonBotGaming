@@ -28,6 +28,12 @@ class SmartResponseManager:
         r'\?$',  # Se termine par ?
         r'\b(est-ce que|peux-tu|pourrais|aide)\b'
     ]
+
+    PRIVACY_PATTERNS = [
+        r'\b(confidentialité|données|data|rgpd|vie privée|stocke|enregistre|informations personnelles)\b',
+        r'\b(mes infos|mes données|mes conversations)\b',
+        r'\b(ce que tu sais de moi|ce que tu gardes)\b'
+    ]
     
     @classmethod
     def analyze_message_context(cls, content: str) -> Dict[str, Any]:
@@ -46,11 +52,23 @@ class SmartResponseManager:
         casual_score = sum(1 for pattern in cls.CASUAL_PATTERNS 
                           if re.search(pattern, content_lower, re.IGNORECASE))
         
+        privacy_score = sum(1 for pattern in cls.PRIVACY_PATTERNS
+                           if re.search(pattern, content_lower, re.IGNORECASE))
+        
         is_question = any(re.search(pattern, content_lower, re.IGNORECASE) 
                          for pattern in cls.QUESTION_PATTERNS)
         
         # Logique de décision
-        if len(content.split()) <= 3 and casual_score > 0:
+        if privacy_score > 0:
+            return {
+                'response_type': 'privacy_info',
+                'reason': 'Privacy related question',
+                'gaming_score': gaming_score,
+                'casual_score': casual_score,
+                'privacy_score': privacy_score
+            }
+        
+        elif len(content.split()) <= 3 and casual_score > 0:
             # Messages courts et casualaux → Réponse simple
             return {
                 'response_type': 'simple',
@@ -102,7 +120,7 @@ class SmartResponseManager:
         
         Returns:
             (should_use_embed, embed_type)
-            embed_type: 'full', 'light', ou 'none'
+            embed_type: 'full', 'light', 'none', or 'privacy_info'
         """
         analysis = cls.analyze_message_context(content)
         
@@ -110,6 +128,8 @@ class SmartResponseManager:
             return False, 'none'
         elif analysis['response_type'] == 'embed_light':
             return True, 'light'
+        elif analysis['response_type'] == 'privacy_info':
+            return False, 'privacy_info' # Privacy info will be a simple text response, not an embed
         else:
             return True, 'full'
 
@@ -117,11 +137,13 @@ class SmartResponseManager:
 if __name__ == "__main__":
     test_messages = [
         "Salut !",
-        "Qui est le plus fort entre l'hippopotame et le rhinocéros ?",
+        "Qui est le plus fort entre l\'hippopotame et le rhinocéros ?",
         "Comment build un necro blood sur Diablo 4 ?",
-        "Peux-tu m'aider avec ma rotation DPS ?",
-        "Merci pour l'aide !",
-        "Quelle est la meta team comp pour Helldivers 2 ?"
+        "Peux-tu m\'aider avec ma rotation DPS ?",
+        "Merci pour l\'aide !",
+        "Quelle est la meta team comp pour Helldivers 2 ?",
+        "Quelles sont mes données de confidentialité ?",
+        "Est-ce que tu stockes mes informations personnelles ?"
     ]
     
     for msg in test_messages:
