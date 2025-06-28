@@ -22,17 +22,11 @@ intents.members = True
 
 bot = commands.Bot(command_prefix=BOT_CONFIG['prefix'], intents=intents)
 
-# Charger les cogs
-async def load_cogs():
-    for filename in os.listdir('./cogs'):
-        if filename.endswith('.py'):
-            await bot.load_extension(f'cogs.{filename[:-3]}')
-
 @bot.event
 async def on_ready():
     print(f'🎮 {bot.user} est connecté et prêt à gaming!')
     print(f'📊 Connecté à {len(bot.guilds)} serveur(s)')
-    await load_cogs()
+    # Cogs will be loaded by setup_hook
 
 @bot.event
 async def on_message(message):
@@ -115,13 +109,17 @@ async def on_message(message):
                         
                         # Gestion des réponses longues
                         if len(response) <= 1000:
+                            response_embed.description = response
                             await message.reply(embed=response_embed)
                         else:
+                            # Envoyer la première partie dans l'embed
+                            response_embed.description = response[:1000] + "..."
                             await message.reply(embed=response_embed)
-                            remaining = response[1000:]
-                            while remaining:
-                                chunk = remaining[:1900]
-                                remaining = remaining[1900:]
+
+                            # Envoyer le reste en plusieurs messages si nécessaire
+                            remaining_response = response[1000:]
+                            for i in range(0, len(remaining_response), 1900):
+                                chunk = remaining_response[i:i+1900]
                                 await message.channel.send(f"```{chunk}```")
                     
                     # Sauvegarder la réponse du bot (si consentement et si response définie)
@@ -136,14 +134,15 @@ async def on_message(message):
                     # Simple message d'erreur sans embed pour l'IA indisponible
                     await message.reply("🤖 L'assistant gaming n'est pas disponible pour le moment. Essaie `!ai status` pour plus d'infos.")
                     
+            except discord.HTTPException as e:
+                print(f"Erreur Discord lors de la mention IA: {e}")
+                await message.reply("❌ Une erreur de communication avec Discord est survenue. Veuillez réessayer plus tard.")
             except Exception as e:
-                print(f"Erreur mention IA: {e}")
-                # Message d'erreur simple et friendly
-                await message.reply("🎮 Salut ! Une petite erreur s'est produite, mais je reste disponible ! Utilise `!ai help` pour voir mes commandes gaming !")
+                print(f"Erreur inattendue lors de la mention IA: {e}")
+                await message.reply("🎮 Oups ! Une erreur inattendue s'est produite. L'assistant gaming est temporairement indisponible. Nous travaillons à résoudre le problème !")
                 
         else:
             # Mention sans contenu = salutation simple SANS embed
-            await message.reply(f"🎮 Salut {message.author.mention} ! Besoin d'aide gaming ?")
             await message.reply(f"🎮 Salut {message.author.mention} ! Besoin d'aide gaming ?")
     
     # Traiter les commandes normales
@@ -166,18 +165,14 @@ async def ping(ctx):
 
 # Charger les cogs (modules)
 async def load_cogs():
-    """Charge automatiquement tous les cogs disponibles"""
-    try:
-        await bot.load_extension('cogs.ai_gaming')
-        print("✅ Module IA Gaming chargé")
-    except Exception as e:
-        print(f"⚠️ Erreur chargement IA Gaming: {e}")
-    
-    try:
-        await bot.load_extension('cogs.privacy_commands')
-        print("✅ Module Privacy Commands chargé")
-    except Exception as e:
-        print(f"⚠️ Erreur chargement Privacy Commands: {e}")
+    """Charge automatiquement tous les cogs disponibles dans le dossier 'cogs'"""
+    for filename in os.listdir('./cogs'):
+        if filename.endswith('.py') and not filename.startswith('__'):
+            try:
+                await bot.load_extension(f'cogs.{filename[:-3]}')
+                print(f"✅ Module {filename[:-3]} chargé")
+            except Exception as e:
+                print(f"⚠️ Erreur chargement du module {filename[:-3]}: {e}")
 
 # Gestion des erreurs
 @bot.event

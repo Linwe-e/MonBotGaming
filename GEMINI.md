@@ -28,7 +28,7 @@ Le fichier `.env` doit contenir les variables suivantes :
 - **Installer les dépendances :** `pip install -r requirements.txt`
 - **Lancer le bot :** `python main.py`
 - **Lancer les tests :** `pytest`
-- **Vérifier le style du code (linting) :** (À définir)
+- **Vérifier le style du code (linting) :** Pylint (via l'extension VS Code)
 
 ## 5. Structure du projet
 
