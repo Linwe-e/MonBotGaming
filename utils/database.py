@@ -5,18 +5,19 @@ DATABASE_NAME = 'monbotgaming.db'
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data', DATABASE_NAME)
 
 class Database:
-    def __init__(self):
+    def __init__(self, db_path=None):
         self.conn = None
         self.cursor = None
+        self.db_path = db_path or DB_PATH
         self._connect()
         self._initialize_db()
 
     def _connect(self):
         """Établit la connexion à la base de données."""
         try:
-            self.conn = sqlite3.connect(DB_PATH)
+            self.conn = sqlite3.connect(self.db_path)
             self.cursor = self.conn.cursor()
-            print(f"✅ Connecté à la base de données : {DB_PATH}")
+            print(f"✅ Connecté à la base de données : {self.db_path}")
         except sqlite3.Error as e:
             print(f"❌ Erreur de connexion à la base de données : {e}")
             # Gérer l'erreur de manière plus robuste en production
@@ -76,6 +77,7 @@ class Database:
             print("🔌 Connexion à la base de données fermée.")
 
 # Instancier la base de données pour l'importation
+# (utilise le chemin par défaut)
 db = Database()
 
 # Assurez-vous que le dossier 'data' existe
