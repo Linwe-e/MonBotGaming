@@ -56,3 +56,42 @@ Le fichier `.env` doit contenir les variables suivantes :
 - **Méthodologie :** L'utilisateur souhaite éviter le "vibe coding". Toujours proposer un plan ou une structure avant d'écrire du code complexe. Décomposer les problèmes en étapes logiques.
 - **Communication :** Préfère des explications claires et concises en français.
 - **Commits :** Suivre le format "Conventional Commits" (par exemple : `feat: ajoute la commande /build`).
+- **Changelog :** Mettre à jour le fichier `CHANGELOG.md` pour toute modification significative selon les principes de [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/).
+
+## 8. Gestion du Changelog
+
+Le projet suit les conventions de **Keep a Changelog** pour maintenir un historique clair des modifications :
+
+### Quand mettre à jour le CHANGELOG.md
+- **Nouvelles fonctionnalités** (Added/✨)
+- **Modifications de fonctionnalités existantes** (Changed/🔄) 
+- **Fonctionnalités dépréciées** (Deprecated/⚠️)
+- **Fonctionnalités supprimées** (Removed/🗑️)
+- **Corrections de bugs** (Fixed/🔧)
+- **Améliorations de sécurité** (Security/🔒)
+
+### Format des entrées
+```markdown
+## [Version] - YYYY-MM-DD
+
+### ✨ Added (Nouvelles fonctionnalités)
+- Description de la nouvelle fonctionnalité
+
+### 🔄 Changed (Modifications)
+- Description des changements
+
+### 🔧 Fixed (Corrections)
+- Description des bugs corrigés
+
+### 🔒 Security (Sécurité)
+- Description des améliorations de sécurité
+```
+
+### Exemples d'entrées pertinentes
+- Ajout/modification de commandes Discord
+- Changements dans l'interface RGPD
+- Nouvelles fonctionnalités d'IA gaming
+- Corrections de bugs critiques
+- Améliorations de sécurité ou conformité
+- Changements dans la structure de la base de données
+- Modifications de configuration importantes
