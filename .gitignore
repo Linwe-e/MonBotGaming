@@ -112,7 +112,7 @@ docs/personal/
 .github/instructions/
 *.instructions.md
 TODO.md
-GEMINI.md # Fichier de contexte local pour l'IA
+GEMINI.md 
 
 # 9. Scripts & Fichiers temporaires
 # Scripts spécifiques à une machine et fichiers de test temporaires.
@@ -136,3 +136,4 @@ archive/
 backup/
 *.backup
 *.old
+
