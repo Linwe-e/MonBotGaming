@@ -74,7 +74,7 @@ class PrivacyCommands(commands.Cog):
             status_embed.add_field(
                 name="🔄 Actions disponibles",
                 value="`!privacy forget` - Supprimer toutes vos données\n"
-                      "`!privacy export` - Télécharger vos données",
+                      "`!privacy export` - Exporter vos données (Article 20 RGPD)",
                 inline=False
             )
         
@@ -177,7 +177,7 @@ class PrivacyCommands(commands.Cog):
     
     @privacy_commands.command(name='export')
     async def privacy_export(self, ctx):
-        """Exporte vos données (droit à la portabilité)"""
+        """Exporte vos données (droit à la portabilité) - Article 20 RGPD"""
         try:
             # Exporter les données
             export_data = rgpd_conversation_memory.export_user_data(ctx.author.id)
@@ -205,32 +205,61 @@ class PrivacyCommands(commands.Cog):
             export_text += "\n=== FIN DE L'EXPORT ===\n"
             export_text += "Note: Les données sont chiffrées et anonymisées conformément au RGPD."
 
-            # Créer un fichier en mémoire
-            export_file = io.BytesIO(export_text.encode('utf-8'))
+            # Vérifier si le bot a la permission d'envoyer des fichiers
+            can_attach_files = ctx.channel.permissions_for(ctx.guild.me).attach_files if ctx.guild else True
             
-            # Créer l'embed de confirmation
-            export_embed = create_gaming_embed(
-                title="📦 Export de vos données",
-                description="Vos données ont été compilées. Vous pouvez les télécharger ci-dessous.",
-                color='success'
-            )
-            export_embed.add_field(
-                name="📄 Fichier",
-                value="`export_donnees.txt`",
-                inline=True
-            )
-            export_embed.add_field(
-                name="🔒 Confidentialité",
-                value="Ce message et le fichier ne sont visibles que par vous.",
-                inline=True
-            )
-            
-            # Envoyer le message éphémère avec le fichier
-            await ctx.send(
-                embed=export_embed, 
-                file=discord.File(export_file, filename="export_donnees.txt"),
-                ephemeral=True
-            )
+            if can_attach_files:
+                # Créer un fichier en mémoire (conforme Article 20 RGPD)
+                export_file = io.BytesIO(export_text.encode('utf-8'))
+                
+                # Créer l'embed de confirmation
+                export_embed = create_gaming_embed(
+                    title="📦 Export de vos données",
+                    description="✅ **Conformité Article 20 RGPD**\n\nVos données sont fournies dans un format structuré et lisible.",
+                    color='success'
+                )
+                export_embed.add_field(
+                    name="📄 Fichier",
+                    value="`export_donnees.txt`",
+                    inline=True
+                )
+                export_embed.add_field(
+                    name="🔒 Confidentialité",
+                    value="Ce message et le fichier ne sont visibles que par vous.",
+                    inline=True
+                )
+                
+                # Envoyer le message éphémère avec le fichier
+                await ctx.send(
+                    embed=export_embed, 
+                    file=discord.File(export_file, filename="export_donnees.txt"),
+                    ephemeral=True
+                )
+            else:
+                # Fallback si pas de permission ATTACH_FILES
+                export_embed = create_gaming_embed(
+                    title="📦 Export de vos données",
+                    description="⚠️ **Permission manquante**\n\nLe bot n'a pas la permission d'envoyer des fichiers. Vos données s'affichent ci-dessous.",
+                    color='warning'
+                )
+                export_embed.add_field(
+                    name="🔒 Conformité RGPD",
+                    value="Données fournies conformément à l'Article 20 (format lisible).",
+                    inline=False
+                )
+                
+                # Envoyer l'embed d'abord
+                await ctx.send(embed=export_embed, ephemeral=True)
+                
+                # Puis envoyer les données en blocs si nécessaire
+                if len(export_text) <= 1900:
+                    await ctx.send(f"```\n{export_text}\n```", ephemeral=True)
+                else:
+                    # Découper en plusieurs messages
+                    chunks = [export_text[i:i+1900] for i in range(0, len(export_text), 1900)]
+                    for i, chunk in enumerate(chunks):
+                        header = f"📄 **Partie {i+1}/{len(chunks)}**\n" if len(chunks) > 1 else ""
+                        await ctx.send(f"{header}```\n{chunk}\n```", ephemeral=True)
         except Exception as e:
             print(f"Erreur lors de l'export de données : {e}")
             error_embed = create_gaming_embed(

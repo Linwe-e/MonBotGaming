@@ -30,9 +30,14 @@ class SmartResponseManager:
     ]
 
     PRIVACY_PATTERNS = [
-        r'\b(confidentialité|données|data|rgpd|vie privée|stocke|enregistre|informations personnelles)\b',
-        r'\b(mes infos|mes données|mes conversations)\b',
-        r'\b(ce que tu sais de moi|ce que tu gardes)\b'
+        r'\b(confidentialité|confidentialite|données|donnees|data|rgpd|vie privée|vie privee|stocke|enregistre|informations personnelles|privacy|private|protection des données|protection des donnees|paramètres de confidentialité|parametres de confidentialite|consentement|mémoire|memoire|conversation sauvegardée|conversation sauvegardee|stockage|suppression des données|suppression des donnees|efface|oublie|forget|delete my data|delete my account|what do you know about me|what do you store about me|what do you keep about me|my privacy|my data|my info|my information|my conversations|personal info|personal data|personal information|erase my data|erase my info|remove my data|remove my info|gdpr|compliance|compliant)\b',
+        r'\b(mes infos|mes données|mes donnees|mes conversations|mes informations|mes data|mes paramètres|mes parametres)\b',
+        r'\b(ce que tu sais de moi|ce que tu gardes|ce que tu stockes|ce que tu enregistres|ce que tu retiens|ce que tu mémorises|ce que tu memorises)\b',
+        r'\b(est-ce que tu gardes|est-ce que tu stockes|est-ce que tu enregistres|est-ce que tu retiens|est-ce que tu mémorises|est-ce que tu memorises)\b',
+        r'\b(privacy policy|politique de confidentialité|politique de confidentialite)\b',
+        r'\b(je veux supprimer|je veux effacer|je veux oublier|je veux retirer|je veux que tu oublies|je veux que tu supprimes)\b',
+        r'\b(que fais-tu de mes données|que fais-tu de mes infos|que fais-tu de mes informations|que fais-tu de mes conversations)\b',
+        r'\b(que fais tu de mes données|que fais tu de mes infos|que fais tu de mes informations|que fais tu de mes conversations)\b',
     ]
     
     @classmethod
@@ -52,8 +57,11 @@ class SmartResponseManager:
         casual_score = sum(1 for pattern in cls.CASUAL_PATTERNS 
                           if re.search(pattern, content_lower, re.IGNORECASE))
         
-        privacy_score = sum(1 for pattern in cls.PRIVACY_PATTERNS
-                           if re.search(pattern, content_lower, re.IGNORECASE))
+        privacy_score = 0
+        for pattern in cls.PRIVACY_PATTERNS:
+            if re.search(pattern, content_lower, re.IGNORECASE):
+                print(f"[DEBUG][analyze_message_context] PRIVACY pattern matched: '{pattern}' in '{content}'")
+                privacy_score += 1
         
         is_question = any(re.search(pattern, content_lower, re.IGNORECASE) 
                          for pattern in cls.QUESTION_PATTERNS)
@@ -123,12 +131,13 @@ class SmartResponseManager:
             embed_type: 'full', 'light', 'none', or 'privacy_info'
         """
         analysis = cls.analyze_message_context(content)
-        
+        print(f"[DEBUG][should_use_embed] content='{content}' | analysis={analysis}")
         if analysis['response_type'] == 'simple':
             return False, 'none'
         elif analysis['response_type'] == 'embed_light':
             return True, 'light'
         elif analysis['response_type'] == 'privacy_info':
+            print(f"[DEBUG][should_use_embed] RGPD detected for content: '{content}'")
             return False, 'privacy_info' # Privacy info will be a simple text response, not an embed
         else:
             return True, 'full'

@@ -32,6 +32,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    print(f"[DEBUG] on_message triggered: author={message.author}, content='{message.content}'")
     """Gestionnaire pour les mentions directes du bot"""
     # Ignorer les messages du bot lui-même
     if message.author == bot.user:
@@ -47,6 +48,7 @@ async def on_message(message):
                 content = content.replace(f'<@{mention.id}>', '').replace(f'<@!{mention.id}>', '')
         
         content = content.strip()
+        print(f"[DEBUG] Bot mention detected. Content after mention strip: '{content}'")
           # Si il y a du contenu après la mention, traiter comme une question IA
         if content:
             try:
@@ -70,8 +72,10 @@ async def on_message(message):
                     # Ajouter le message de l'utilisateur à la mémoire (si consentement)
                     rgpd_conversation_memory.add_message(message.author.id, content)
                     
+                    print(f"[DEBUG] About to call SmartResponseManager.should_use_embed with content: '{content}'")
                     # Analyser le contexte pour déterminer le type de réponse
                     use_embed, embed_type = SmartResponseManager.should_use_embed(content)
+                    print(f"[DEBUG] should_use_embed: use_embed={use_embed}, embed_type={embed_type}, content='{content}'")
                     
                     # Récupérer le contexte de conversation
                     context_list = rgpd_conversation_memory.get_conversation_context(message.author.id)
@@ -105,8 +109,9 @@ async def on_message(message):
                         await message.reply(embed=simple_embed)
                         
                     elif embed_type == 'privacy_info':
+                        print(f"[DEBUG] Bloc RGPD activé pour: {content}")
                         privacy_response = (
-                            f"Salut {message.author.mention} ! Je suis là pour t'aider avec tes questions gaming. "
+                            f"[MBG-RGPD] Salut {message.author.mention} ! Je suis là pour t'aider avec tes questions gaming. "
                             "Concernant tes données et ta confidentialité, voici comment je fonctionne:\n\n"
                             "**Consentement RGPD :** Je ne stocke tes conversations et ton consentement que si tu as explicitement donné ton accord via notre système RGPD. "
                             "Ceci est fait pour améliorer la pertinence de mes réponses en me souvenant du contexte de nos échanges.\n\n"
@@ -118,6 +123,7 @@ async def on_message(message):
                             "Mon objectif est de t'offrir la meilleure assistance gaming tout en respectant ta vie privée. 🎮"
                         )
                         await message.reply(privacy_response)
+                        return
 
                     else:
                         # Question gaming technique → Embed complet

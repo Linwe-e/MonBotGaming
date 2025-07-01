@@ -40,7 +40,7 @@ class Database:
             """)
             # Exemple de table pour les builds de jeux
             self.cursor.execute("""
-                CREATE TABLE IF NOT EXISTS game_builds (
+                CREATE TABLE IF NOT EXISTS game_builds ( 
                     build_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     game_name TEXT NOT NULL,
                     build_name TEXT NOT NULL,

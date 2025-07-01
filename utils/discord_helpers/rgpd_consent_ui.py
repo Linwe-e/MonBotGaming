@@ -166,41 +166,106 @@ class PrivacyManagementView(discord.ui.View):
     
     @discord.ui.button(label='📦 Exporter', style=discord.ButtonStyle.green, emoji='📦')
     async def export_data(self, interaction: discord.Interaction, button: discord.ui.Button):
-        """Exporter ses données"""
+        """Exporter ses données - Conformité Article 20 RGPD"""
         if interaction.user.id != self.user_id:
             await interaction.response.send_message("❌ Ce n'est pas pour toi !", ephemeral=True)
             return
         
-        export_data = rgpd_conversation_memory.export_user_data(self.user_id)
-        
-        export_embed = create_gaming_embed(
-            title="📦 Export de tes données",
-            description=f"Voici tout ce que MonBotGaming stocke à ton sujet :",
-            color='info'
-        )
-        
-        export_embed.add_field(
-            name="📊 Résumé",
-            value=f"• ID anonymisé: {export_data['user_id_hash'][:16]}...\n"
-                  f"• Consentement: {'✅' if export_data['consent_status'] else '❌'}\n"
-                  f"• Messages: {export_data['conversations_count']}\n"
-                  f"• Export: {export_data['export_date'][:10]}",
-            inline=False
-        )
-        
-        if export_data.get('conversations'):
-            conversations_preview = []
-            for conv in export_data['conversations'][:3]:  # Seulement les 3 derniers
-                sender = "Toi" if not conv['is_bot'] else "Bot"
-                conversations_preview.append(f"{sender}: {conv['content'][:50]}...")
+        try:
+            import io
             
-            export_embed.add_field(
-                name="💬 Aperçu des conversations",
-                value="\n".join(conversations_preview) or "Aucune conversation",
-                inline=False
+            export_data = rgpd_conversation_memory.export_user_data(str(self.user_id))
+            
+            if not export_data['consent_status']:
+                await interaction.response.send_message("Vous n'avez pas de données à exporter car vous n'avez pas donné votre consentement.", ephemeral=True)
+                return
+
+            # Créer le contenu du fichier d'export
+            export_text = f"=== EXPORT DE DONNÉES MONBOTGAMING ===\n\n"
+            export_text += f"ID Utilisateur Anonymisé: {export_data['user_id_hash']}\n"
+            export_text += f"Date d'Export: {export_data['export_date']}\n"
+            export_text += f"Consentement Accordé: {'Oui' if export_data['consent_status'] else 'Non'}\n"
+            export_text += f"Nombre de Messages en Mémoire: {export_data['conversations_count']}\n\n"
+            
+            if export_data.get('conversations'):
+                export_text += "=== DÉTAIL DES CONVERSATIONS ===\n\n"
+                for conv in export_data['conversations']:
+                    sender = "Bot" if conv['is_bot'] else "Vous"
+                    timestamp = datetime.fromisoformat(conv['timestamp']).strftime('%d/%m/%Y %H:%M:%S')
+                    export_text += f"[{timestamp}] {sender}:\n{conv['content']}\n\n"
+            else:
+                export_text += "Aucune conversation en mémoire.\n"
+
+            export_text += "\n=== FIN DE L'EXPORT ===\n"
+            export_text += "Note: Les données sont chiffrées et anonymisées conformément au RGPD."
+
+            # Vérifier si le bot a la permission d'envoyer des fichiers
+            can_attach_files = False
+            if interaction.guild and interaction.channel:
+                can_attach_files = interaction.channel.permissions_for(interaction.guild.me).attach_files
+            else:
+                can_attach_files = True  # Fallback pour les DM
+            
+            if can_attach_files:
+                # Créer un fichier en mémoire (conforme Article 20 RGPD)
+                export_file = io.BytesIO(export_text.encode('utf-8'))
+                
+                # Créer l'embed de confirmation
+                export_embed = create_gaming_embed(
+                    title="📦 Export de tes données",
+                    description="✅ **Conformité Article 20 RGPD**\n\nTes données sont fournies dans un format structuré et lisible.",
+                    color='success'
+                )
+                export_embed.add_field(
+                    name="📄 Fichier",
+                    value="`export_donnees.txt`",
+                    inline=True
+                )
+                export_embed.add_field(
+                    name="🔒 Confidentialité",
+                    value="Ce message et le fichier ne sont visibles que par toi.",
+                    inline=True
+                )
+                
+                # Envoyer le message éphémère avec le fichier
+                await interaction.response.send_message(
+                    embed=export_embed, 
+                    file=discord.File(export_file, filename="export_donnees.txt"),
+                    ephemeral=True
+                )
+            else:
+                # Fallback si pas de permission ATTACH_FILES
+                export_embed = create_gaming_embed(
+                    title="📦 Export de tes données",
+                    description="⚠️ **Permission manquante**\n\nLe bot n'a pas la permission d'envoyer des fichiers. Tes données s'affichent ci-dessous.",
+                    color='warning'
+                )
+                export_embed.add_field(
+                    name="� Conformité RGPD",
+                    value="Données fournies conformément à l'Article 20 (format lisible).",
+                    inline=False
+                )
+                
+                # Envoyer l'embed d'abord
+                await interaction.response.send_message(embed=export_embed, ephemeral=True)
+                
+                # Puis envoyer les données en blocs si nécessaire
+                if len(export_text) <= 1900:
+                    await interaction.followup.send(f"```\n{export_text}\n```", ephemeral=True)
+                else:
+                    # Découper en plusieurs messages
+                    chunks = [export_text[i:i+1900] for i in range(0, len(export_text), 1900)]
+                    for i, chunk in enumerate(chunks):
+                        header = f"📄 **Partie {i+1}/{len(chunks)}**\n" if len(chunks) > 1 else ""
+                        await interaction.followup.send(f"{header}```\n{chunk}\n```", ephemeral=True)
+        except Exception as e:
+            print(f"Erreur lors de l'export de données (interface boutons): {e}")
+            error_embed = create_gaming_embed(
+                title="❌ Erreur d'export",
+                description="Une erreur est survenue lors de la création de ton fichier d'export. L'erreur a été enregistrée.",
+                color='error'
             )
-        
-        await interaction.response.send_message(embed=export_embed, ephemeral=True)
+            await interaction.response.send_message(embed=error_embed, ephemeral=True)
     
     @discord.ui.button(label='🗑️ Tout supprimer', style=discord.ButtonStyle.red, emoji='🗑️')
     async def forget_all(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -209,7 +274,7 @@ class PrivacyManagementView(discord.ui.View):
             await interaction.response.send_message("❌ Ce n'est pas pour toi !", ephemeral=True)
             return
         
-        success = rgpd_conversation_memory.revoke_user_consent(self.user_id)
+        success = rgpd_conversation_memory.revoke_user_consent(str(self.user_id))
         
         if success:
             forget_embed = create_gaming_embed(

@@ -59,21 +59,29 @@ Les données sont utilisées exclusivement pour :
 ## 👤 Vos droits RGPD
 
 ### Accès et portabilité
-- **`!privacy status`** - Voir vos données stockées
-- **`!privacy export`** - Télécharger vos données
+- **`!privacy`** - Interface interactive complète avec boutons Discord
+- **`!privacy status`** - Voir vos données stockées en détail
+- **`!privacy export`** - Exporter et télécharger vos données (Article 20 RGPD)
+  - **Format téléchargeable** : fichier `export_donnees.txt` si permissions accordées
+  - **Fallback intelligent** : affichage texte si permissions manquantes
+  - **Données complètes** : conversations, consentement, métadonnées
 
 ### Rectification et effacement
-- **`!privacy forget`** - Droit à l'oubli (suppression complète)
+- **`!privacy forget`** - Droit à l'oubli (suppression complète et immédiate)
 - **Suppression automatique** à expiration du consentement
+- **Interface boutons** pour actions rapides et sécurisées
 
 ### Consentement
-- **`!privacy accept [heures]`** - Accorder le consentement
+- **`!privacy accept [heures]`** - Accorder le consentement via commande
+- **Interface interactive** - Boutons Discord pour consentement moderne
 - **`!privacy decline`** - Refuser le stockage
-- **Révocable à tout moment** sans justification
+- **Révocable à tout moment** sans justification ni délai
 
-### Information
-- **`!privacy info`** - Informations RGPD détaillées
-- **Transparence complète** sur le traitement
+### Information et transparence
+- **`!privacy info`** - Informations RGPD détaillées et complètes
+- **Interface moderne** - Messages éphémères pour la confidentialité
+- **Transparence totale** sur le traitement et les droits
+- **Documentation accessible** - Explications claires et actionables
 
 ## 🌍 Transferts de données
 
