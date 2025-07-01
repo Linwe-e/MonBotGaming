@@ -9,8 +9,11 @@ import os
 # Ajouter utils au path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
 
+import io
+from datetime import datetime, timedelta
 from utils.data_management.rgpd_conversation_memory import rgpd_conversation_memory
 from utils.discord_helpers.embed_helpers import create_gaming_embed
+from config import RGPD_CONFIG
 
 class PrivacyCommands(commands.Cog):
     """
@@ -43,13 +46,15 @@ class PrivacyCommands(commands.Cog):
             )
             status_embed.add_field(
                 name="💡 Pour activer la mémoire",
-                value="Utilisez `!privacy accept [heures]` pour permettre au bot de se souvenir de nos conversations.",
+                value="Utilisez `!privacy accept` pour permettre au bot de se souvenir de nos conversations.",
                 inline=False
             )
         else:
             # Calculer les stats
             hashed_id = rgpd_conversation_memory._hash_user_id(str(ctx.author.id))
             message_count = len(rgpd_conversation_memory.conversations.get(hashed_id, []))
+            consent_date = datetime.fromisoformat(consent_data.get('consent_date', ''))
+            expiry_date = consent_date + timedelta(days=RGPD_CONFIG['consent_duration_days'])
             
             status_embed = create_gaming_embed(
                 title="🔒 Statut de vos données",
@@ -60,9 +65,9 @@ class PrivacyCommands(commands.Cog):
             status_embed.add_field(
                 name="📊 Données stockées",
                 value=f"• Messages en mémoire: {message_count}\n"
-                      f"• Durée de conservation: {consent_data.get('memory_duration_hours', 2)}h\n"
-                      f"• Consentement accordé: {consent_data.get('consent_date', '')[:10]}\n"
-                      f"• Type de données: Contexte conversationnel chiffré",
+                      f"• Conservation des messages: {RGPD_CONFIG['memory_duration_hours']}h\n"
+                      f"• Accordé le: {consent_date.strftime('%d/%m/%Y')}\n"
+                      f"• Expire le: {expiry_date.strftime('%d/%m/%Y')}",
                 inline=False
             )
             
@@ -73,34 +78,28 @@ class PrivacyCommands(commands.Cog):
                 inline=False
             )
         
-        await ctx.send(embed=status_embed)
+        await ctx.send(embed=status_embed, ephemeral=True)
     
     @privacy_commands.command(name='accept')
-    async def privacy_accept(self, ctx, duration: int = 2):
-        """Active la mémoire conversationnelle - !privacy accept [heures]"""
+    async def privacy_accept(self, ctx):
+        """Active la mémoire conversationnelle"""
         
-        # Valider la durée
-        if duration < 1:
-            duration = 1
-        elif duration > 24:
-            duration = 24
-        
-        # Accorder le consentement
-        success = rgpd_conversation_memory.grant_user_consent(ctx.author.id, duration)
+        # Accorder le consentement pour la durée par défaut
+        success = rgpd_conversation_memory.grant_user_consent(ctx.author.id)
         
         if success:
             accept_embed = create_gaming_embed(
                 title="✅ Consentement accordé",
-                description=f"Merci ! Je peux maintenant garder en mémoire nos conversations pendant **{duration}h**.",
+                description=f"Merci ! Je peux maintenant garder en mémoire nos conversations pendant **{RGPD_CONFIG['memory_duration_hours']}h**.",
                 color='success'
             )
             
             accept_embed.add_field(
-                name="🔐 Sécurité",
-                value="• Vos données sont chiffrées (AES-256)\n"
-                      "• Suppression automatique après expiration\n"
-                      "• Aucune donnée personnelle identifiable stockée\n"
-                      "• Conformité RGPD garantie",
+                name="🔐 Sécurité et Durée",
+                value=f"• Votre consentement est valable pour **{RGPD_CONFIG['consent_duration_days']} jours**.\n"
+                      f"• Vos données sont chiffrées (AES-256).\n"
+                      f"• Suppression automatique des messages après {RGPD_CONFIG['memory_duration_hours']}h.\n"
+                      "• Conformité RGPD garantie.",
                 inline=False
             )
             
@@ -116,7 +115,7 @@ class PrivacyCommands(commands.Cog):
                 color='error'
             )
         
-        await ctx.send(embed=accept_embed)
+        await ctx.send(embed=accept_embed, ephemeral=True)
     
     @privacy_commands.command(name='decline')
     async def privacy_decline(self, ctx):
@@ -143,7 +142,7 @@ class PrivacyCommands(commands.Cog):
             inline=False
         )
         
-        await ctx.send(embed=decline_embed)
+        await ctx.send(embed=decline_embed, ephemeral=True)
     
     @privacy_commands.command(name='forget')
     async def privacy_forget(self, ctx):
@@ -174,62 +173,72 @@ class PrivacyCommands(commands.Cog):
                 color='error'
             )
         
-        await ctx.send(embed=forget_embed)
+        await ctx.send(embed=forget_embed, ephemeral=True)
     
     @privacy_commands.command(name='export')
     async def privacy_export(self, ctx):
         """Exporte vos données (droit à la portabilité)"""
-        
-        # Exporter les données
-        export_data = rgpd_conversation_memory.export_user_data(ctx.author.id)
-        
-        export_embed = create_gaming_embed(
-            title="📦 Export de vos données",
-            description="Voici toutes les données que MonBotGaming stocke à votre sujet :",
-            color='info'
-        )
-        
-        export_embed.add_field(
-            name="📊 Informations générales",
-            value=f"• ID anonymisé: {export_data['user_id_hash']}\n"
-                  f"• Consentement: {'✅ Accordé' if export_data['consent_status'] else '❌ Non accordé'}\n"
-                  f"• Conversations: {export_data['conversations_count']} messages\n"
-                  f"• Date d'export: {export_data['export_date'][:10]}",
-            inline=False
-        )
-        
-        if export_data['consent_status'] and export_data.get('conversations'):
-            # Créer un fichier avec les données
-            export_text = "=== EXPORT DONNÉES MONBOTGAMING ===\n\n"
-            export_text += f"Utilisateur: {export_data['user_id_hash']}\n"
-            export_text += f"Date d'export: {export_data['export_date']}\n\n"
-            export_text += "=== CONVERSATIONS ===\n"
+        try:
+            # Exporter les données
+            export_data = rgpd_conversation_memory.export_user_data(ctx.author.id)
             
-            for conv in export_data['conversations']:
-                sender = "Vous" if not conv['is_bot'] else "Bot"
-                export_text += f"{conv['timestamp'][:19]} - {sender}: {conv['content']}\n"
+            if not export_data['consent_status']:
+                await ctx.send("Vous n'avez pas de données à exporter car vous n'avez pas donné votre consentement.", ephemeral=True)
+                return
+
+            # Créer le contenu du fichier d'export
+            export_text = f"=== EXPORT DE DONNÉES MONBOTGAMING ===\n\n"
+            export_text += f"ID Utilisateur Anonymisé: {export_data['user_id_hash']}\n"
+            export_text += f"Date d'Export: {export_data['export_date']}\n"
+            export_text += f"Consentement Accordé: {'Oui' if export_data['consent_status'] else 'Non'}\n"
+            export_text += f"Nombre de Messages en Mémoire: {export_data['conversations_count']}\n\n"
             
-            # Envoyer en fichier si possible (Discord limite)
-            if len(export_text) < 1900:
-                export_embed.add_field(
-                    name="💬 Conversations",
-                    value=f"```{export_text[-1800:]}```",
-                    inline=False
-                )
+            if export_data.get('conversations'):
+                export_text += "=== DÉTAIL DES CONVERSATIONS ===\n\n"
+                for conv in export_data['conversations']:
+                    sender = "Bot" if conv['is_bot'] else "Vous"
+                    timestamp = datetime.fromisoformat(conv['timestamp']).strftime('%d/%m/%Y %H:%M:%S')
+                    export_text += f"[{timestamp}] {sender}:\n{conv['content']}\n\n"
             else:
-                export_embed.add_field(
-                    name="💬 Conversations",
-                    value="Trop de données pour affichage. Fichier généré dans `data/exports/`",
-                    inline=False
-                )
-        
-        export_embed.add_field(
-            name="🔒 Note de confidentialité",
-            value=export_data['note'],
-            inline=False
-        )
-        
-        await ctx.send(embed=export_embed)
+                export_text += "Aucune conversation en mémoire.\n"
+
+            export_text += "\n=== FIN DE L'EXPORT ===\n"
+            export_text += "Note: Les données sont chiffrées et anonymisées conformément au RGPD."
+
+            # Créer un fichier en mémoire
+            export_file = io.BytesIO(export_text.encode('utf-8'))
+            
+            # Créer l'embed de confirmation
+            export_embed = create_gaming_embed(
+                title="📦 Export de vos données",
+                description="Vos données ont été compilées. Vous pouvez les télécharger ci-dessous.",
+                color='success'
+            )
+            export_embed.add_field(
+                name="📄 Fichier",
+                value="`export_donnees.txt`",
+                inline=True
+            )
+            export_embed.add_field(
+                name="🔒 Confidentialité",
+                value="Ce message et le fichier ne sont visibles que par vous.",
+                inline=True
+            )
+            
+            # Envoyer le message éphémère avec le fichier
+            await ctx.send(
+                embed=export_embed, 
+                file=discord.File(export_file, filename="export_donnees.txt"),
+                ephemeral=True
+            )
+        except Exception as e:
+            print(f"Erreur lors de l'export de données : {e}")
+            error_embed = create_gaming_embed(
+                title="❌ Erreur d'export",
+                description="Une erreur est survenue lors de la création de votre fichier d'export. L'erreur a été enregistrée.",
+                color='error'
+            )
+            await ctx.send(embed=error_embed, ephemeral=True)
     
     @privacy_commands.command(name='info')
     async def privacy_info(self, ctx):
@@ -270,9 +279,9 @@ class PrivacyCommands(commands.Cog):
         
         info_embed.add_field(
             name="⏱️ Conservation",
-            value="• Durée configurable (1-24h)\n"
+            value=f"• Mémoire conversationnelle: {RGPD_CONFIG['memory_duration_hours']}h\n"
+                  f"• Consentement utilisateur: {RGPD_CONFIG['consent_duration_days']} jours\n"
                   "• Suppression automatique\n"
-                  "• Nettoyage quotidien\n"
                   "• Pas de sauvegarde long terme",
             inline=True
         )
@@ -304,7 +313,7 @@ class PrivacyCommands(commands.Cog):
             inline=False
         )
         
-        await ctx.send(embed=info_embed)
+        await ctx.send(embed=info_embed, ephemeral=True)
 
 async def setup(bot):
     """Charge le cog Privacy"""

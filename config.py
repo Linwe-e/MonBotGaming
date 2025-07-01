@@ -197,3 +197,9 @@ MINIGAMES_CONFIG = {
     'quiz_categories': ['lore', 'gameplay', 'items', 'characters'],
     'loot_rarities': ['common', 'uncommon', 'rare', 'epic', 'legendary']
 }
+
+# 🔒 Configuration RGPD
+RGPD_CONFIG = {
+    'memory_duration_hours': 48,
+    'consent_duration_days': 30
+}

@@ -9,82 +9,39 @@ import os
 # Ajouter utils au path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
 
+from datetime import datetime, timedelta
+from config import RGPD_CONFIG
 from utils.data_management.rgpd_conversation_memory import rgpd_conversation_memory
 from utils.discord_helpers.embed_helpers import create_gaming_embed
 
 class ConsentView(discord.ui.View):
     """Vue avec boutons pour le consentement RGPD"""
     
-    def __init__(self, user_id: int):
+    def __init__(self, user_id: int, bot: commands.Bot, original_message: discord.Message):
         super().__init__(timeout=300)  # 5 minutes pour décider
         self.user_id = user_id
+        self.bot = bot
+        self.original_message = original_message
         self.responded = False
     
-    @discord.ui.button(label='✅ Activer la mémoire (2h)', style=discord.ButtonStyle.green, emoji='🧠')
-    async def accept_2h(self, interaction: discord.Interaction, button: discord.ui.Button):
-        """Accepter avec 2h de mémoire"""
+    @discord.ui.button(label=f"✅ Activer la mémoire ({RGPD_CONFIG['memory_duration_hours']}h)", style=discord.ButtonStyle.green, emoji='🧠')
+    async def accept(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Accepter avec la durée par défaut"""
         if interaction.user.id != self.user_id:
             await interaction.response.send_message("❌ Ce n'est pas pour toi !", ephemeral=True)
             return
         
         self.responded = True
-        success = rgpd_conversation_memory.grant_user_consent(self.user_id, 2)
+        success = rgpd_conversation_memory.grant_user_consent(self.user_id)
         
         if success:
             success_embed = create_gaming_embed(
                 title="🎮 Mémoire activée !",
-                description="✅ **Parfait !** Je peux maintenant me souvenir de nos conversations pendant **2 heures**.\n\nJe vais pouvoir t'aider de manière plus personnalisée ! 🚀",
+                description=f"✅ **Parfait !** Je me souviendrai de nos conversations pendant **{RGPD_CONFIG['memory_duration_hours']} heures**.\n\nJe réponds à ta question initiale tout de suite ! 🚀",
                 color='success'
             )
-            success_embed.add_field(
-                name="🔐 Sécurité garantie",
-                value="• Données chiffrées AES-256\n• Suppression automatique après 2h\n• Aucune info personnelle stockée",
-                inline=False
-            )
-            success_embed.add_field(
-                name="🎯 Tu peux maintenant...",
-                value="• Me parler naturellement\n• Garder le contexte entre messages\n• Recevoir des réponses personnalisées",
-                inline=False
-            )
-        else:
-            success_embed = create_gaming_embed(
-                title="❌ Erreur",
-                description="Une erreur s'est produite. Réessaie plus tard !",
-                color='error'
-            )
-        
-        # Désactiver tous les boutons
-        for item in self.children:
-            item.disabled = True
-        
-        await interaction.response.edit_message(embed=success_embed, view=self)
-    
-    @discord.ui.button(label='⚡ Mémoire étendue (8h)', style=discord.ButtonStyle.blurple, emoji='⏰')
-    async def accept_8h(self, interaction: discord.Interaction, button: discord.ui.Button):
-        """Accepter avec 8h de mémoire"""
-        if interaction.user.id != self.user_id:
-            await interaction.response.send_message("❌ Ce n'est pas pour toi !", ephemeral=True)
-            return
-        
-        self.responded = True
-        success = rgpd_conversation_memory.grant_user_consent(self.user_id, 8)
-        
-        if success:
-            success_embed = create_gaming_embed(
-                title="🎮 Mémoire étendue activée !",
-                description="✅ **Excellent choix !** Je garde nos conversations en mémoire pendant **8 heures**.\n\nIdéal pour nos longues sessions gaming ! 🎯",
-                color='success'
-            )
-            success_embed.add_field(
-                name="🔐 Sécurité renforcée",
-                value="• Chiffrement AES-256\n• Auto-suppression après 8h\n• Anonymisation complète",
-                inline=False
-            )
-            success_embed.add_field(
-                name="🚀 Avantages",
-                value="• Continuité sur plusieurs heures\n• Contexte préservé entre sessions\n• Assistance gaming optimisée",
-                inline=False
-            )
+            # Relancer le traitement du message original
+            await self.bot.process_commands(self.original_message)
         else:
             success_embed = create_gaming_embed(
                 title="❌ Erreur",
@@ -111,16 +68,6 @@ class ConsentView(discord.ui.View):
             title="✅ Choix respecté",
             description="**Aucun problème !** Je continuerai à t'aider sans mémoire conversationnelle.\n\nTu peux changer d'avis à tout moment ! 🎮",
             color='info'
-        )
-        decline_embed.add_field(
-            name="💡 Fonctionnalités disponibles",
-            value="• Aide gaming instantanée\n• Réponses aux questions\n• Commandes de base\n• Assistance ponctuelle",
-            inline=False
-        )
-        decline_embed.add_field(
-            name="🔄 Pour plus tard",
-            value="Si tu changes d'avis, mentionne-moi simplement et je te repropose ces options !",
-            inline=False
         )
         
         # Désactiver tous les boutons
@@ -153,7 +100,7 @@ class ConsentView(discord.ui.View):
         
         info_embed.add_field(
             name="🔐 Sécurité",
-            value="• Chiffrement AES-256 (standard bancaire)\n• Hachage anonymisant des identifiants\n• Suppression automatique garantie\n• Stockage local sécurisé",
+            value=f"• Chiffrement AES-256 (standard bancaire)\n• Hachage anonymisant des identifiants\n• Suppression automatique après {RGPD_CONFIG['memory_duration_hours']}h\n• Stockage local sécurisé",
             inline=False
         )
         
@@ -198,6 +145,8 @@ class PrivacyManagementView(discord.ui.View):
         else:
             hashed_id = rgpd_conversation_memory._hash_user_id(str(self.user_id))
             message_count = len(rgpd_conversation_memory.conversations.get(hashed_id, []))
+            consent_date = datetime.fromisoformat(consent_data.get('consent_date', ''))
+            expiry_date = consent_date + timedelta(days=RGPD_CONFIG['consent_duration_days'])
             
             status_embed = create_gaming_embed(
                 title="🔒 Tes données",
@@ -206,7 +155,10 @@ class PrivacyManagementView(discord.ui.View):
             )
             status_embed.add_field(
                 name="📊 Résumé",
-                value=f"• Messages: {message_count}\n• Durée: {consent_data.get('memory_duration_hours', 2)}h\n• Depuis: {consent_data.get('consent_date', '')[:10]}",
+                value=f"• Messages en mémoire: {message_count}\n"
+                      f"• Conservation des messages: {RGPD_CONFIG['memory_duration_hours']}h\n"
+                      f"• Accordé le: {consent_date.strftime('%d/%m/%Y')}\n"
+                      f"• Expire le: {expiry_date.strftime('%d/%m/%Y')}",
                 inline=False
             )
         
@@ -280,12 +232,12 @@ class PrivacyManagementView(discord.ui.View):
         await interaction.response.send_message(embed=forget_embed, ephemeral=True)
 
 
-async def show_consent_request(message, bot):
+async def show_consent_request(ctx, bot, original_message):
     """Affiche la demande de consentement avec boutons interactifs"""
     
     consent_embed = create_gaming_embed(
         title="🎮 Salut ! Configurons ta mémoire gaming",
-        description=f"Hey **{message.author.display_name}** ! 👋\n\nPour t'offrir la meilleure expérience gaming, je peux garder en mémoire nos conversations. **Ton choix !**",
+        description=f"Hey **{ctx.author.display_name}** ! 👋\n\nPour t'offrir la meilleure expérience gaming, je peux garder en mémoire nos conversations. **Ton choix !**",
         color='info'
     )
     
@@ -297,24 +249,25 @@ async def show_consent_request(message, bot):
     
     consent_embed.add_field(
         name="🔐 Sécurité garantie :",
-        value="• Données chiffrées et anonymisées\n• Suppression automatique\n• Conforme RGPD\n• Révocable à tout moment",
+        value=f"• Données chiffrées et anonymisées\n• Suppression automatique après {RGPD_CONFIG['memory_duration_hours']}h\n• Conforme RGPD\n• Révocable à tout moment",
         inline=False
     )
     
     consent_embed.add_field(
         name="⏰ Choisis ta durée :",
-        value="**2h** = Parfait pour une session gaming\n**8h** = Idéal pour toute la journée\n**Refuser** = Pas de problème !",
+        value=f"**{RGPD_CONFIG['memory_duration_hours']}h** = Parfait pour une session gaming\n**Refuser** = Pas de problème !",
         inline=False
     )
     
-    view = ConsentView(message.author.id)
+    view = ConsentView(ctx.author.id, bot, original_message)
     
     try:
-        await message.reply(embed=consent_embed, view=view)
+        await ctx.send(embed=consent_embed, view=view, ephemeral=True)
         return True
     except Exception as e:
         print(f"Erreur affichage consentement: {e}")
         return False
+
 
 
 async def show_privacy_management(ctx):
@@ -331,7 +284,7 @@ async def show_privacy_management(ctx):
     if has_consent:
         privacy_embed.add_field(
             name="✅ Statut actuel",
-            value=f"Mémoire active ({consent_data.get('memory_duration_hours', 2)}h restantes)",
+            value=f"Mémoire active ({RGPD_CONFIG['memory_duration_hours']}h)",
             inline=False
         )
     else:
@@ -350,7 +303,7 @@ async def show_privacy_management(ctx):
     view = PrivacyManagementView(ctx.author.id)
     
     try:
-        await ctx.send(embed=privacy_embed, view=view)
+        await ctx.send(embed=privacy_embed, view=view, ephemeral=True)
         return True
     except Exception as e:
         print(f"Erreur gestion privacy: {e}")

@@ -62,7 +62,9 @@ async def on_message(message):
                     
                     # Si pas de consentement, afficher l'interface avec boutons
                     if not has_consent:
-                        await show_consent_request(message, bot)
+                        # On crée un contexte "artificiel" pour pouvoir envoyer un message éphémère
+                        ctx = await bot.get_context(message)
+                        await show_consent_request(ctx, bot, message)
                         return
                     
                     # Ajouter le message de l'utilisateur à la mémoire (si consentement)

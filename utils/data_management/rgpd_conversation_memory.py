@@ -11,6 +11,7 @@ from typing import Dict, List, Optional, Tuple
 import asyncio
 from cryptography.fernet import Fernet
 import base64
+from config import RGPD_CONFIG
 
 class RGPDConversationMemory:
     """Gestionnaire de mémoire conversationnelle conforme RGPD"""
@@ -24,8 +25,6 @@ class RGPDConversationMemory:
         
         # Configuration RGPD
         self.max_history_per_user = 5  # Réduit pour minimisation des données
-        self.default_memory_duration_hours = 2  # Durée par défaut plus courte
-        self.max_memory_duration_hours = 24  # Maximum autorisé
         
         # Chiffrement
         self.encryption_key = self._get_or_create_encryption_key()
@@ -86,17 +85,16 @@ class RGPDConversationMemory:
         
         # Vérifier si le consentement n'a pas expiré
         consent_date = datetime.fromisoformat(consent_data.get('consent_date', ''))
-        expiry_days = consent_data.get('consent_duration_days', 30)
         
-        if datetime.now() > consent_date + timedelta(days=expiry_days):
+        if datetime.now() > consent_date + timedelta(days=RGPD_CONFIG['consent_duration_days']):
             # Consentement expiré, le supprimer
             self.revoke_user_consent(user_id)
             return False, {}
         
         return True, consent_data
-    def request_user_consent(self, user_id: str, memory_duration_hours: int = None) -> str:
+    def request_user_consent(self, user_id: str) -> str:
         """Génère un message de demande de consentement RGPD"""
-        duration = memory_duration_hours or self.default_memory_duration_hours
+        duration = RGPD_CONFIG['memory_duration_hours']
         
         consent_message = f"""🔒 **Gestion des Données - MonBotGaming**
 
@@ -114,24 +112,18 @@ Pour améliorer nos conversations, je peux garder en mémoire notre discussion p
 • Données chiffrées et sécurisées
 
 **Acceptez-vous le stockage temporaire ?**
-Répondez `!privacy accept {duration}` ou `!privacy decline`"""
+Répondez `!privacy accept` ou `!privacy decline`"""
         
         return consent_message
     
-    def grant_user_consent(self, user_id: str, memory_duration_hours: int = None) -> bool:
+    def grant_user_consent(self, user_id: str) -> bool:
         """Enregistre le consentement de l'utilisateur"""
-        duration = memory_duration_hours or self.default_memory_duration_hours
-        
-        # Limiter la durée max
-        if duration > self.max_memory_duration_hours:
-            duration = self.max_memory_duration_hours
-        
         hashed_id = self._hash_user_id(user_id)
         
         self.user_consents[hashed_id] = {
             'consent_date': datetime.now().isoformat(),
-            'memory_duration_hours': duration,
-            'consent_duration_days': 30,  # Le consentement expire après 30 jours
+            'memory_duration_hours': RGPD_CONFIG['memory_duration_hours'],
+            'consent_duration_days': RGPD_CONFIG['consent_duration_days'],
             'data_types': ['conversation_context', 'gaming_preferences'],
             'user_hash': hashed_id  # Pour l'audit
         }
@@ -216,7 +208,7 @@ Répondez `!privacy accept {duration}` ou `!privacy decline`"""
         for hashed_id in list(self.conversations.keys()):
             if hashed_id in self.user_consents:
                 consent_data = self.user_consents[hashed_id]
-                hours_limit = 48 # On nettoie les messages de plus de 48h
+                hours_limit = RGPD_CONFIG['memory_duration_hours'] # On nettoie les messages de plus de 48h
                 cutoff = datetime.now() - timedelta(hours=hours_limit)
                 
                 # Filtrer les messages récents
