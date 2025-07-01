@@ -2,6 +2,7 @@
 
 import discord
 from datetime import datetime
+from typing import Union, Optional
 
 def create_ai_response_embed(question, response, context=None):
     """Créer un embed stylé pour les réponses IA gaming"""
@@ -97,3 +98,143 @@ def create_status_embed(service_name, is_available, details=None):
         embed.add_field(name="Détails", value=details, inline=False)
     
     return embed
+
+async def send_long_response(target: Union[discord.Message, discord.Interaction], 
+                           response: str, 
+                           embed: Optional[discord.Embed] = None,
+                           max_embed_length: int = 1000,
+                           max_simple_length: int = 1500,
+                           chunk_size: int = 1900):
+    """
+    Gère l'envoi de réponses longues avec troncature intelligente
+    
+    Args:
+        target: Message Discord ou Interaction à répondre
+        response: Texte de la réponse
+        embed: Embed optionnel à utiliser
+        max_embed_length: Longueur max dans un embed
+        max_simple_length: Longueur max pour réponse simple
+        chunk_size: Taille des chunks pour messages multiples
+    """
+    try:
+        is_message = isinstance(target, discord.Message)
+        
+        if embed:
+            # Mode embed
+            if len(response) <= max_embed_length:
+                embed.description = response
+                if is_message:
+                    await target.reply(embed=embed)
+                else:
+                    await target.response.send_message(embed=embed)
+            else:
+                # Embed + messages supplémentaires
+                embed.description = response[:max_embed_length]
+                embed.set_footer(text="Suite de la réponse dans les messages suivants...")
+                
+                if is_message:
+                    await target.reply(embed=embed)
+                    channel = target.channel
+                else:
+                    await target.response.send_message(embed=embed)
+                    channel = target.channel
+                
+                # Envoyer le reste en chunks
+                remaining = response[max_embed_length:]
+                while remaining:
+                    chunk = remaining[:chunk_size]
+                    remaining = remaining[chunk_size:]
+                    if hasattr(channel, 'send'):
+                        await channel.send(f"```{chunk}```")
+        else:
+            # Mode message simple
+            if len(response) <= max_simple_length:
+                if is_message:
+                    await target.reply(response)
+                else:
+                    await target.response.send_message(response)
+            else:
+                # Message tronqué
+                truncated = response[:max_simple_length] + "..."
+                if is_message:
+                    await target.reply(truncated)
+                else:
+                    await target.response.send_message(truncated)
+                    
+    except Exception as e:
+        print(f"Erreur lors de l'envoi de la réponse longue: {e}")
+        error_msg = "❌ Une erreur s'est produite lors de l'envoi de la réponse."
+        try:
+            is_message = isinstance(target, discord.Message)
+            if is_message:
+                await target.reply(error_msg)
+            else:
+                await target.response.send_message(error_msg)
+        except:
+            pass
+
+async def send_ai_response(target: Union[discord.Message, discord.Interaction],
+                          question: str,
+                          response: str,
+                          use_embed: bool = True,
+                          embed_type: str = 'full',
+                          context: Optional[str] = None):
+    """
+    Gère l'envoi complet d'une réponse IA selon le type
+    
+    Args:
+        target: Message Discord ou Interaction à répondre
+        question: Question posée
+        response: Réponse de l'IA
+        use_embed: Utiliser un embed ou non
+        embed_type: Type d'embed ('full', 'light', 'none')
+        context: Contexte optionnel
+    """
+    try:
+        if embed_type == 'light':
+            # Embed simple sans fioritures
+            simple_embed = discord.Embed(
+                description=response[:1000] if len(response) <= 1000 else response[:1000] + "...",
+                color=0x00ff88
+            )
+            await send_long_response(target, response, embed=simple_embed)
+            
+        elif use_embed and embed_type == 'full':
+            # Embed complet
+            response_embed = create_ai_response_embed(question, response, context)
+            await send_long_response(target, response, embed=response_embed)
+            
+        else:
+            # Réponse simple sans embed
+            await send_long_response(target, response)
+            
+    except Exception as e:
+        print(f"Erreur lors de l'envoi de la réponse IA: {e}")
+        error_msg = "🎮 Une erreur s'est produite lors de la génération de la réponse."
+        try:
+            if hasattr(target, 'reply'):
+                await target.reply(error_msg)
+            else:
+                await target.response.send_message(error_msg)
+        except:
+            pass
+
+def truncate_response(response: str, max_length: int = 1000, add_ellipsis: bool = True) -> str:
+    """
+    Tronque intelligemment une réponse
+    
+    Args:
+        response: Texte à tronquer
+        max_length: Longueur maximale
+        add_ellipsis: Ajouter "..." si tronqué
+    
+    Returns:
+        Texte tronqué
+    """
+    if len(response) <= max_length:
+        return response
+    
+    if add_ellipsis:
+        return response[:max_length] + "..."
+    else:
+        return response[:max_length]

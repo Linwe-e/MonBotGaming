@@ -13,8 +13,11 @@ load_dotenv()
 
 # Importer nos configurations et utilitaires
 from config import BOT_CONFIG, GAMES
-
-
+from utils.ai.gemini_ai import gemini_ai
+from utils.discord_helpers.embed_helpers import create_ai_response_embed, create_gaming_embed, send_ai_response, send_long_response
+from utils.ai.smart_response import SmartResponseManager
+from utils.data_management.rgpd_conversation_memory import rgpd_conversation_memory
+from utils.discord_helpers.rgpd_consent_ui import show_consent_request
 from utils.discord_helpers.gaming_helpers import gaming_helpers
 
 # Configuration du bot
@@ -49,15 +52,9 @@ async def on_message(message):
         
         content = content.strip()
         print(f"[DEBUG] Bot mention detected. Content after mention strip: '{content}'")
-          # Si il y a du contenu après la mention, traiter comme une question IA
+        # Si il y a du contenu après la mention, traiter comme une question IA
         if content:
             try:
-                from utils.ai.gemini_ai import gemini_ai
-                from utils.discord_helpers.embed_helpers import create_ai_response_embed, create_gaming_embed
-                from utils.ai.smart_response import SmartResponseManager
-                from utils.data_management.rgpd_conversation_memory import rgpd_conversation_memory
-                from utils.discord_helpers.rgpd_consent_ui import show_consent_request
-                
                 if gemini_ai.is_available():
                     # Vérifier le consentement RGPD
                     has_consent, consent_data = rgpd_conversation_memory.check_user_consent(message.author.id)
@@ -80,24 +77,8 @@ async def on_message(message):
                             # Générer une réponse IA SANS contexte
                             response = await gemini_ai.gaming_assistant(content, game_context="")
                             
-                            if embed_type == 'light':
-                                # Embed simple
-                                simple_embed = discord.Embed(
-                                    description=response[:1000] if len(response) <= 1000 else response[:1000] + "...",
-                                    color=0x00ff88
-                                )
-                                await message.reply(embed=simple_embed)
-                            elif use_embed:
-                                # Embed complet
-                                response_embed = create_ai_response_embed(content, response)
-                                response_embed.description = response[:1000] if len(response) <= 1000 else response[:1000]
-                                await message.reply(embed=response_embed)
-                            else:
-                                # Réponse simple
-                                if len(response) <= 1500:
-                                    await message.reply(response)
-                                else:
-                                    await message.reply(response[:1500] + "...")
+                            # Utiliser la fonction centralisée pour envoyer la réponse
+                            await send_ai_response(message, content, response, use_embed, embed_type)
                         
                         return
                     
@@ -119,27 +100,6 @@ async def on_message(message):
                         response = f"Salut {message.author.mention} ! 🎮"
                         await message.reply(response)
                         
-                    elif not use_embed:
-                        # Question casual → Réponse simple
-                        response = await gemini_ai.gaming_assistant(content, game_context=context)
-                        
-                        # Réponse simple sans embed pour conversations casual
-                        if len(response) <= 1500:
-                            await message.reply(response)
-                        else:
-                            await message.reply(response[:1500] + "...")
-                            
-                    elif embed_type == 'light':
-                        # Question gaming légère → Embed simple
-                        response = await gemini_ai.gaming_assistant(content, game_context=context)
-                        
-                        # Embed léger sans fioritures
-                        simple_embed = discord.Embed(
-                            description=response[:1000] if len(response) <= 1000 else response[:1000] + "...",
-                            color=0x00ff88
-                        )
-                        await message.reply(embed=simple_embed)
-                        
                     elif embed_type == 'privacy_info':
                         print(f"[DEBUG] Bloc RGPD activé pour: {content}")
                         privacy_response = (
@@ -158,27 +118,9 @@ async def on_message(message):
                         return
 
                     else:
-                        # Question gaming technique → Embed complet
+                        # Questions gaming et autres → Utiliser la fonction centralisée
                         response = await gemini_ai.gaming_assistant(content, game_context=context)
-                        
-                        # Créer un embed de réponse stylé
-                        response_embed = create_ai_response_embed(content, response)
-                        
-                        # Gestion des réponses longues
-                        if len(response) <= 1000:
-                            response_embed.description = response
-                            await message.reply(embed=response_embed)
-                        else:
-                            # Envoyer la première partie dans l'embed
-                            response_embed.description = response[:1000]
-                            response_embed.set_footer(text="Suite de la réponse dans les messages suivants...")
-                            await message.reply(embed=response_embed)
-
-                            # Envoyer le reste en plusieurs messages si nécessaire
-                            remaining_response = response[1000:]
-                            for i in range(0, len(remaining_response), 1900):
-                                chunk = remaining_response[i:i+1900]
-                                await message.channel.send(f"```{chunk}```")
+                        await send_ai_response(message, content, response, use_embed, embed_type, context)
                     
                     # Sauvegarder la réponse du bot (si consentement et si response définie)
                     if 'response' in locals():

@@ -180,7 +180,7 @@ class ConsentView(discord.ui.View):
                 # Importer les modules nécessaires
                 from utils.ai.gemini_ai import gemini_ai
                 from utils.ai.smart_response import SmartResponseManager
-                from utils.discord_helpers.embed_helpers import create_ai_response_embed
+                from utils.discord_helpers.embed_helpers import send_ai_response
                 from utils.data_management.rgpd_conversation_memory import rgpd_conversation_memory
                 
                 if gemini_ai.is_available():
@@ -193,24 +193,8 @@ class ConsentView(discord.ui.View):
                     # Générer la réponse IA
                     response = await gemini_ai.gaming_assistant(content)
                     
-                    if embed_type == 'light':
-                        # Embed simple
-                        simple_embed = discord.Embed(
-                            description=response[:1000] if len(response) <= 1000 else response[:1000] + "...",
-                            color=0x00ff88
-                        )
-                        await self.original_message.reply(embed=simple_embed)
-                    elif use_embed:
-                        # Embed complet
-                        response_embed = create_ai_response_embed(content, response)
-                        response_embed.description = response[:1000] if len(response) <= 1000 else response[:1000]
-                        await self.original_message.reply(embed=response_embed)
-                    else:
-                        # Réponse simple
-                        if len(response) <= 1500:
-                            await self.original_message.reply(response)
-                        else:
-                            await self.original_message.reply(response[:1500] + "...")
+                    # Utiliser la fonction centralisée pour envoyer la réponse
+                    await send_ai_response(self.original_message, content, response, use_embed, embed_type)
                     
                     # Sauvegarder la réponse du bot
                     rgpd_conversation_memory.add_message(
@@ -243,7 +227,7 @@ class ConsentView(discord.ui.View):
                 # Importer les modules nécessaires
                 from utils.ai.gemini_ai import gemini_ai
                 from utils.ai.smart_response import SmartResponseManager
-                from utils.discord_helpers.embed_helpers import create_ai_response_embed
+                from utils.discord_helpers.embed_helpers import send_ai_response
                 
                 if gemini_ai.is_available():
                     # Analyser le type de réponse
@@ -252,24 +236,8 @@ class ConsentView(discord.ui.View):
                     # Générer la réponse IA SANS contexte
                     response = await gemini_ai.gaming_assistant(content, game_context="")
                     
-                    if embed_type == 'light':
-                        # Embed simple
-                        simple_embed = discord.Embed(
-                            description=response[:1000] if len(response) <= 1000 else response[:1000] + "...",
-                            color=0x00ff88
-                        )
-                        await self.original_message.reply(embed=simple_embed)
-                    elif use_embed:
-                        # Embed complet
-                        response_embed = create_ai_response_embed(content, response)
-                        response_embed.description = response[:1000] if len(response) <= 1000 else response[:1000]
-                        await self.original_message.reply(embed=response_embed)
-                    else:
-                        # Réponse simple
-                        if len(response) <= 1500:
-                            await self.original_message.reply(response)
-                        else:
-                            await self.original_message.reply(response[:1500] + "...")
+                    # Utiliser la fonction centralisée pour envoyer la réponse
+                    await send_ai_response(self.original_message, content, response, use_embed, embed_type)
                 else:
                     await self.original_message.reply("🤖 L'assistant gaming n'est pas disponible pour le moment.")
             else:

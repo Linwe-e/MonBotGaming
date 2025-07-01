@@ -16,6 +16,6 @@ Liste des tâches mise à jour après synchronisation avec le dépôt distant.
 
 ## 🧹 Refactoring et Qualité du Code
 
-- [ ] **Factoriser la gestion des réponses longues :** La logique pour découper les réponses de l'IA en plusieurs messages est présente à la fois dans `main.py` et dans plusieurs commandes de `cogs/ai_gaming.py`. Il faudrait la centraliser dans une fonction (par exemple dans `utils/discord_helpers/embed_helpers.py`) pour éviter la duplication.
+- [x] **Factoriser la gestion des réponses longues :** ✅ TERMINÉ - Logique centralisée dans `utils/discord_helpers/embed_helpers.py` avec les fonctions `send_long_response()` et `send_ai_response()`. Code dupliqué supprimé de `main.py`, `cogs/ai_gaming.py` et `utils/discord_helpers/rgpd_consent_ui.py`.
 
-- [ ] **Déplacer les imports locaux dans `main.py` :** La fonction `on_message` effectue des imports locaux. Pour une meilleure lisibilité et par convention, ils devraient être déplacés en haut du fichier.
+- [x] **Déplacer les imports locaux dans `main.py` :** ✅ TERMINÉ - Tous les imports sont maintenant en haut du fichier pour une meilleure lisibilité et performance.

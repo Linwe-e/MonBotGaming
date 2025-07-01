@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
 from config import GAMES
 from utils.discord_helpers.gaming_helpers import gaming_helpers
 from utils.ai.gemini_ai import gemini_ai
-from utils.discord_helpers.embed_helpers import create_ai_response_embed, create_gaming_embed, create_help_embed, create_status_embed
+from utils.discord_helpers.embed_helpers import create_ai_response_embed, create_gaming_embed, create_help_embed, create_status_embed, send_ai_response, send_long_response
 
 class AIGaming(commands.Cog):
     """
@@ -70,23 +70,25 @@ class AIGaming(commands.Cog):
         
         try:
             # Générer la réponse
-            response = await gemini_ai.gaming_assistant(question, game_context)
+            response = await gemini_ai.gaming_assistant(question, game_context or "")
             
-            # Créer l'embed de réponse stylé avec les nouvelles fonctions
+            # Créer l'embed de réponse stylé
             response_embed = create_ai_response_embed(question, response, game_context)
             
             # Gestion des réponses longues
             if len(response) <= 1000:
-                # Réponse courte : tout dans l'embed
+                response_embed.description = response
                 await thinking_msg.edit(embed=response_embed)
             else:
-                # Réponse longue : embed + messages additionnels
+                # Embed + messages supplémentaires pour les réponses longues
+                response_embed.description = response[:1000]
+                response_embed.set_footer(text="Suite de la réponse dans les messages suivants...")
                 await thinking_msg.edit(embed=response_embed)
                 
                 # Envoyer le reste en chunks
                 remaining = response[1000:]
                 while remaining:
-                    chunk = remaining[:1900]  # Limite Discord 2000 chars
+                    chunk = remaining[:1900]
                     remaining = remaining[1900:]
                     await ctx.send(f"```{chunk}```")
                     
