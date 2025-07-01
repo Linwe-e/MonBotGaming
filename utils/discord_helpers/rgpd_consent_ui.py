@@ -14,6 +14,10 @@ from config import RGPD_CONFIG
 from utils.data_management.rgpd_conversation_memory import rgpd_conversation_memory
 from utils.discord_helpers.embed_helpers import create_gaming_embed
 
+# Cache temporaire pour les refus de consentement (éviter de redemander immédiatement)
+consent_declined_cache = {}
+
+
 class ConsentView(discord.ui.View):
     """Vue avec boutons pour le consentement RGPD"""
     
@@ -32,16 +36,20 @@ class ConsentView(discord.ui.View):
             return
         
         self.responded = True
-        success = rgpd_conversation_memory.grant_user_consent(self.user_id)
+        success = rgpd_conversation_memory.grant_user_consent(str(self.user_id))
         
         if success:
             success_embed = create_gaming_embed(
                 title="🎮 Mémoire activée !",
-                description=f"✅ **Parfait !** Je me souviendrai de nos conversations pendant **{RGPD_CONFIG['memory_duration_hours']} heures**.\n\nJe réponds à ta question initiale tout de suite ! 🚀",
+                description=f"✅ **Parfait !** Je me souviendrai de nos conversations pendant **{RGPD_CONFIG['memory_duration_hours']} heures**.\n\nJe réponds à ta question initiale maintenant ! 🚀",
                 color='success'
             )
-            # Relancer le traitement du message original
-            await self.bot.process_commands(self.original_message)
+            
+            # Répondre d'abord avec la confirmation
+            await interaction.response.edit_message(embed=success_embed, view=None)
+            
+            # Puis traiter la question initiale
+            await self._process_original_question()
         else:
             success_embed = create_gaming_embed(
                 title="❌ Erreur",
@@ -64,9 +72,12 @@ class ConsentView(discord.ui.View):
         
         self.responded = True
         
+        # Mémoriser le refus pour éviter de redemander (30 jours)
+        consent_declined_cache[self.user_id] = datetime.now() + timedelta(days=30)
+        
         decline_embed = create_gaming_embed(
             title="✅ Choix respecté",
-            description="**Aucun problème !** Je continuerai à t'aider sans mémoire conversationnelle.\n\nTu peux changer d'avis à tout moment ! 🎮",
+            description="**Aucun problème !** Je continuerai à t'aider sans mémoire conversationnelle.\n\nTu peux changer d'avis à tout moment avec `!privacy` ! 🎮\n\n*Je ne te redemanderai plus pendant 30 jours.*",
             color='info'
         )
         
@@ -75,42 +86,199 @@ class ConsentView(discord.ui.View):
             item.disabled = True
         
         await interaction.response.edit_message(embed=decline_embed, view=self)
+        
+        # Répondre à la question initiale sans mémoire
+        await self._process_original_question_no_memory()
     
     @discord.ui.button(label='ℹ️ Plus d\'infos', style=discord.ButtonStyle.secondary, emoji='📋')
     async def more_info(self, interaction: discord.Interaction, button: discord.ui.Button):
         """Afficher plus d'informations RGPD"""
         
         info_embed = create_gaming_embed(
-            title="📋 Informations détaillées - RGPD",
-            description="**MonBotGaming** respecte ta vie privée et se conforme au RGPD européen.",
+            title="📋 Information RGPD - MonBotGaming",
+            description="Détails sur la collecte et le traitement de vos données personnelles",
             color='info'
         )
         
         info_embed.add_field(
-            name="📝 Qu'est-ce qui est stocké ?",
-            value="• Le contexte de nos conversations récentes\n• Tes préférences gaming (déduites)\n• **Aucune donnée personnelle identifiable**\n• Tout est chiffré et anonymisé",
-            inline=False
+            name="📝 Données collectées",
+            value="• Contenu des messages (chiffré)\n"
+                  "• Contexte de conversation\n"
+                  "• Préférences gaming déduites\n"
+                  "• Horodatage des interactions",
+            inline=True
         )
         
         info_embed.add_field(
-            name="🎯 Pourquoi ?",
-            value="• Pour te donner des réponses plus pertinentes\n• Éviter de répéter les infos\n• Adapter mes conseils gaming à tes goûts\n• Maintenir une conversation fluide",
-            inline=False
+            name="🎯 Finalités",
+            value="• Améliorer la qualité des réponses\n"
+                  "• Maintenir le contexte conversationnel\n"
+                  "• Personnaliser l'assistance gaming\n"
+                  "• Éviter les répétitions",
+            inline=True
         )
         
         info_embed.add_field(
             name="🔐 Sécurité",
-            value=f"• Chiffrement AES-256 (standard bancaire)\n• Hachage anonymisant des identifiants\n• Suppression automatique après {RGPD_CONFIG['memory_duration_hours']}h\n• Stockage local sécurisé",
-            inline=False
+            value="• Chiffrement AES-256\n"
+                  "• Hachage anonymisant des IDs\n"
+                  "• Suppression automatique\n"
+                  "• Accès restreint aux données",
+            inline=True
         )
         
         info_embed.add_field(
-            name="⚖️ Tes droits",
-            value="• Révocation à tout moment (`!privacy forget`)\n• Export de tes données (`!privacy export`)\n• Consultation du statut (`!privacy status`)\n• Information complète garantie",
+            name="⏱️ Conservation",
+            value=f"• Mémoire conversationnelle: {RGPD_CONFIG['memory_duration_hours']}h\n"
+                  f"• Consentement utilisateur: {RGPD_CONFIG['consent_duration_days']} jours\n"
+                  "• Suppression automatique\n"
+                  "• Pas de sauvegarde long terme",
+            inline=True
+        )
+        
+        info_embed.add_field(
+            name="🌍 Transferts",
+            value="• Stockage local uniquement\n"
+                  "• Pas de transfert vers des tiers\n"
+                  "• Pas d'analyse externe\n"
+                  "• Données en France",
+            inline=True
+        )
+        
+        info_embed.add_field(
+            name="⚖️ Base légale",
+            value="• Consentement explicite (Art. 6 RGPD)\n"
+                  "• Révocable à tout moment\n"
+                  "• Durée limitée\n"
+                  "• Finalité spécifique",
+            inline=True
+        )
+        
+        info_embed.add_field(
+            name="📧 Contact",
+            value="Pour toute question sur vos données:\n"
+                  "• Utilisez les commandes `!privacy`\n"
+                  "• Droit à l'information garanti\n"
+                  "• Réponse immédiate automatisée",
             inline=False
         )
         
         await interaction.response.send_message(embed=info_embed, ephemeral=True)
+    
+    async def _process_original_question(self):
+        """Traite la question initiale après acceptation du consentement"""
+        try:
+            # Extraire le contenu du message sans la mention du bot
+            content = self.original_message.content
+            for mention in self.original_message.mentions:
+                if mention == self.bot.user:
+                    content = content.replace(f'<@{mention.id}>', '').replace(f'<@!{mention.id}>', '')
+            
+            content = content.strip()
+            
+            if content:
+                # Importer les modules nécessaires
+                from utils.ai.gemini_ai import gemini_ai
+                from utils.ai.smart_response import SmartResponseManager
+                from utils.discord_helpers.embed_helpers import create_ai_response_embed
+                from utils.data_management.rgpd_conversation_memory import rgpd_conversation_memory
+                
+                if gemini_ai.is_available():
+                    # Ajouter la question à la mémoire
+                    rgpd_conversation_memory.add_message(str(self.user_id), content)
+                    
+                    # Analyser le type de réponse
+                    use_embed, embed_type = SmartResponseManager.should_use_embed(content)
+                    
+                    # Générer la réponse IA
+                    response = await gemini_ai.gaming_assistant(content)
+                    
+                    if embed_type == 'light':
+                        # Embed simple
+                        simple_embed = discord.Embed(
+                            description=response[:1000] if len(response) <= 1000 else response[:1000] + "...",
+                            color=0x00ff88
+                        )
+                        await self.original_message.reply(embed=simple_embed)
+                    elif use_embed:
+                        # Embed complet
+                        response_embed = create_ai_response_embed(content, response)
+                        response_embed.description = response[:1000] if len(response) <= 1000 else response[:1000]
+                        await self.original_message.reply(embed=response_embed)
+                    else:
+                        # Réponse simple
+                        if len(response) <= 1500:
+                            await self.original_message.reply(response)
+                        else:
+                            await self.original_message.reply(response[:1500] + "...")
+                    
+                    # Sauvegarder la réponse du bot
+                    rgpd_conversation_memory.add_message(
+                        str(self.user_id),
+                        response[:200] + "..." if len(response) > 200 else response,
+                        is_bot=True
+                    )
+                else:
+                    await self.original_message.reply("🤖 L'assistant gaming n'est pas disponible pour le moment.")
+            else:
+                # Pas de question, juste une salutation
+                await self.original_message.reply(f"🎮 Salut {self.original_message.author.mention} ! Maintenant que j'ai ma mémoire, on peut discuter gaming ! 🚀")
+                
+        except Exception as e:
+            print(f"Erreur lors du traitement de la question initiale: {e}")
+            await self.original_message.reply("🎮 Je suis prêt à t'aider maintenant ! Pose-moi tes questions gaming ! 🚀")
+    
+    async def _process_original_question_no_memory(self):
+        """Traite la question initiale sans mémoire (après refus de consentement)"""
+        try:
+            # Extraire le contenu du message sans la mention du bot
+            content = self.original_message.content
+            for mention in self.original_message.mentions:
+                if mention == self.bot.user:
+                    content = content.replace(f'<@{mention.id}>', '').replace(f'<@!{mention.id}>', '')
+            
+            content = content.strip()
+            
+            if content:
+                # Importer les modules nécessaires
+                from utils.ai.gemini_ai import gemini_ai
+                from utils.ai.smart_response import SmartResponseManager
+                from utils.discord_helpers.embed_helpers import create_ai_response_embed
+                
+                if gemini_ai.is_available():
+                    # Analyser le type de réponse
+                    use_embed, embed_type = SmartResponseManager.should_use_embed(content)
+                    
+                    # Générer la réponse IA SANS contexte
+                    response = await gemini_ai.gaming_assistant(content, game_context="")
+                    
+                    if embed_type == 'light':
+                        # Embed simple
+                        simple_embed = discord.Embed(
+                            description=response[:1000] if len(response) <= 1000 else response[:1000] + "...",
+                            color=0x00ff88
+                        )
+                        await self.original_message.reply(embed=simple_embed)
+                    elif use_embed:
+                        # Embed complet
+                        response_embed = create_ai_response_embed(content, response)
+                        response_embed.description = response[:1000] if len(response) <= 1000 else response[:1000]
+                        await self.original_message.reply(embed=response_embed)
+                    else:
+                        # Réponse simple
+                        if len(response) <= 1500:
+                            await self.original_message.reply(response)
+                        else:
+                            await self.original_message.reply(response[:1500] + "...")
+                else:
+                    await self.original_message.reply("🤖 L'assistant gaming n'est pas disponible pour le moment.")
+            else:
+                # Pas de question, juste une salutation
+                await self.original_message.reply(f"🎮 Salut {self.original_message.author.mention} ! En quoi puis-je t'aider ?")
+                
+        except Exception as e:
+            print(f"Erreur lors du traitement de la question sans mémoire: {e}")
+            await self.original_message.reply("🎮 En quoi puis-je t'aider gaming ? 🚀")
     
     async def on_timeout(self):
         """Appelé quand la vue expire"""
@@ -134,7 +302,7 @@ class PrivacyManagementView(discord.ui.View):
             await interaction.response.send_message("❌ Ce n'est pas pour toi !", ephemeral=True)
             return
         
-        has_consent, consent_data = rgpd_conversation_memory.check_user_consent(self.user_id)
+        has_consent, consent_data = rgpd_conversation_memory.check_user_consent(str(self.user_id))
         
         if not has_consent:
             status_embed = create_gaming_embed(
@@ -295,10 +463,59 @@ class PrivacyManagementView(discord.ui.View):
             )
         
         await interaction.response.send_message(embed=forget_embed, ephemeral=True)
+    
+    @discord.ui.button(label='✅ Activer mémoire', style=discord.ButtonStyle.green, emoji='🧠')
+    async def activate_memory(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Activer la mémoire conversationnelle"""
+        if interaction.user.id != self.user_id:
+            await interaction.response.send_message("❌ Ce n'est pas pour toi !", ephemeral=True)
+            return
+        
+        # Nettoyer le cache de refus
+        clear_consent_cache_for_user(self.user_id)
+        
+        # Accorder le consentement
+        success = rgpd_conversation_memory.grant_user_consent(str(self.user_id))
+        
+        if success:
+            activate_embed = create_gaming_embed(
+                title="🎮 Mémoire activée !",
+                description=f"✅ **Parfait !** Je me souviendrai maintenant de nos conversations pendant **{RGPD_CONFIG['memory_duration_hours']} heures**.",
+                color='success'
+            )
+            activate_embed.add_field(
+                name="🔐 Sécurité",
+                value=f"• Données chiffrées et anonymisées\n• Suppression automatique après {RGPD_CONFIG['memory_duration_hours']}h\n• Révocable à tout moment",
+                inline=False
+            )
+        else:
+            activate_embed = create_gaming_embed(
+                title="❌ Erreur",
+                description="Une erreur s'est produite lors de l'activation. Réessaie plus tard !",
+                color='error'
+            )
+        
+        await interaction.response.send_message(embed=activate_embed, ephemeral=True)
+
+
+def clear_consent_cache_for_user(user_id: int):
+    """Nettoie le cache de refus pour un utilisateur spécifique"""
+    if user_id in consent_declined_cache:
+        del consent_declined_cache[user_id]
 
 
 async def show_consent_request(ctx, bot, original_message):
     """Affiche la demande de consentement avec boutons interactifs"""
+    
+    # Vérifier si l'utilisateur a récemment refusé le consentement
+    user_id = ctx.author.id
+    if user_id in consent_declined_cache:
+        if datetime.now() < consent_declined_cache[user_id]:
+            # L'utilisateur a refusé récemment, ne pas redemander
+            return False
+        else:
+            # Le délai est expiré, supprimer du cache
+            del consent_declined_cache[user_id]
     
     consent_embed = create_gaming_embed(
         title="🎮 Salut ! Configurons ta mémoire gaming",

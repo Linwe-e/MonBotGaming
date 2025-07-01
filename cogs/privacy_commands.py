@@ -144,130 +144,39 @@ class PrivacyCommands(commands.Cog):
         
         await ctx.send(embed=decline_embed, ephemeral=True)
     
-    @privacy_commands.command(name='forget')
-    async def privacy_forget(self, ctx):
-        """Supprime toutes vos données (droit à l'oubli)"""
+    @privacy_commands.command(name='consent')
+    async def privacy_consent(self, ctx):
+        """Force la redemande de consentement (si vous avez changé d'avis)"""
         
-        # Supprimer toutes les données
-        success = rgpd_conversation_memory.revoke_user_consent(ctx.author.id)
+        from utils.discord_helpers.rgpd_consent_ui import consent_declined_cache, show_consent_request
         
-        if success:
-            forget_embed = create_gaming_embed(
-                title="🗑️ Données supprimées",
-                description="✅ **Droit à l'oubli exercé**\n\nToutes vos données ont été définitivement supprimées.",
-                color='success'
-            )
-            
-            forget_embed.add_field(
-                name="🧹 Actions effectuées",
-                value="• Consentement révoqué\n"
-                      "• Conversations supprimées\n"
-                      "• Données chiffrées effacées\n"
-                      "• Historique vidé",
-                inline=False
-            )
-        else:
-            forget_embed = create_gaming_embed(
-                title="❌ Erreur",
-                description="Une erreur s'est produite lors de la suppression.",
-                color='error'
-            )
+        # Supprimer du cache de refus si présent
+        if ctx.author.id in consent_declined_cache:
+            del consent_declined_cache[ctx.author.id]
         
-        await ctx.send(embed=forget_embed, ephemeral=True)
+        # Créer un message artificiel pour la demande de consentement
+        class FakeMessage:
+            def __init__(self, content, author, mentions):
+                self.content = content
+                self.author = author
+                self.mentions = mentions
+        
+        fake_message = FakeMessage("@bot je veux changer d'avis sur le consentement", ctx.author, [ctx.bot.user])
+        
+        # Afficher la demande de consentement
+        success = await show_consent_request(ctx, ctx.bot, fake_message)
+        
+        if not success:
+            # Si la fonction ne fonctionne pas, afficher un message alternatif
+            consent_embed = create_gaming_embed(
+                title="🔄 Changement de consentement",
+                description="Voulez-vous maintenant autoriser le stockage de vos conversations ?",
+                color='info'
+            )
+            await ctx.send(embed=consent_embed, ephemeral=True)
     
-    @privacy_commands.command(name='export')
-    async def privacy_export(self, ctx):
-        """Exporte vos données (droit à la portabilité) - Article 20 RGPD"""
-        try:
-            # Exporter les données
-            export_data = rgpd_conversation_memory.export_user_data(ctx.author.id)
-            
-            if not export_data['consent_status']:
-                await ctx.send("Vous n'avez pas de données à exporter car vous n'avez pas donné votre consentement.", ephemeral=True)
-                return
-
-            # Créer le contenu du fichier d'export
-            export_text = f"=== EXPORT DE DONNÉES MONBOTGAMING ===\n\n"
-            export_text += f"ID Utilisateur Anonymisé: {export_data['user_id_hash']}\n"
-            export_text += f"Date d'Export: {export_data['export_date']}\n"
-            export_text += f"Consentement Accordé: {'Oui' if export_data['consent_status'] else 'Non'}\n"
-            export_text += f"Nombre de Messages en Mémoire: {export_data['conversations_count']}\n\n"
-            
-            if export_data.get('conversations'):
-                export_text += "=== DÉTAIL DES CONVERSATIONS ===\n\n"
-                for conv in export_data['conversations']:
-                    sender = "Bot" if conv['is_bot'] else "Vous"
-                    timestamp = datetime.fromisoformat(conv['timestamp']).strftime('%d/%m/%Y %H:%M:%S')
-                    export_text += f"[{timestamp}] {sender}:\n{conv['content']}\n\n"
-            else:
-                export_text += "Aucune conversation en mémoire.\n"
-
-            export_text += "\n=== FIN DE L'EXPORT ===\n"
-            export_text += "Note: Les données sont chiffrées et anonymisées conformément au RGPD."
-
-            # Vérifier si le bot a la permission d'envoyer des fichiers
-            can_attach_files = ctx.channel.permissions_for(ctx.guild.me).attach_files if ctx.guild else True
-            
-            if can_attach_files:
-                # Créer un fichier en mémoire (conforme Article 20 RGPD)
-                export_file = io.BytesIO(export_text.encode('utf-8'))
-                
-                # Créer l'embed de confirmation
-                export_embed = create_gaming_embed(
-                    title="📦 Export de vos données",
-                    description="✅ **Conformité Article 20 RGPD**\n\nVos données sont fournies dans un format structuré et lisible.",
-                    color='success'
-                )
-                export_embed.add_field(
-                    name="📄 Fichier",
-                    value="`export_donnees.txt`",
-                    inline=True
-                )
-                export_embed.add_field(
-                    name="🔒 Confidentialité",
-                    value="Ce message et le fichier ne sont visibles que par vous.",
-                    inline=True
-                )
-                
-                # Envoyer le message éphémère avec le fichier
-                await ctx.send(
-                    embed=export_embed, 
-                    file=discord.File(export_file, filename="export_donnees.txt"),
-                    ephemeral=True
-                )
-            else:
-                # Fallback si pas de permission ATTACH_FILES
-                export_embed = create_gaming_embed(
-                    title="📦 Export de vos données",
-                    description="⚠️ **Permission manquante**\n\nLe bot n'a pas la permission d'envoyer des fichiers. Vos données s'affichent ci-dessous.",
-                    color='warning'
-                )
-                export_embed.add_field(
-                    name="🔒 Conformité RGPD",
-                    value="Données fournies conformément à l'Article 20 (format lisible).",
-                    inline=False
-                )
-                
-                # Envoyer l'embed d'abord
-                await ctx.send(embed=export_embed, ephemeral=True)
-                
-                # Puis envoyer les données en blocs si nécessaire
-                if len(export_text) <= 1900:
-                    await ctx.send(f"```\n{export_text}\n```", ephemeral=True)
-                else:
-                    # Découper en plusieurs messages
-                    chunks = [export_text[i:i+1900] for i in range(0, len(export_text), 1900)]
-                    for i, chunk in enumerate(chunks):
-                        header = f"📄 **Partie {i+1}/{len(chunks)}**\n" if len(chunks) > 1 else ""
-                        await ctx.send(f"{header}```\n{chunk}\n```", ephemeral=True)
-        except Exception as e:
-            print(f"Erreur lors de l'export de données : {e}")
-            error_embed = create_gaming_embed(
-                title="❌ Erreur d'export",
-                description="Une erreur est survenue lors de la création de votre fichier d'export. L'erreur a été enregistrée.",
-                color='error'
-            )
-            await ctx.send(embed=error_embed, ephemeral=True)
+    # Commande forget supprimée - utilisez l'interface !privacy avec boutons
+    # Commande export supprimée - utilisez l'interface !privacy avec boutons
     
     @privacy_commands.command(name='info')
     async def privacy_info(self, ctx):
