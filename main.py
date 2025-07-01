@@ -12,13 +12,12 @@ sys.path.append(os.path.dirname(__file__))
 load_dotenv()
 
 # Importer nos configurations et utilitaires
-from config import BOT_CONFIG, GAMES
+from config import BOT_CONFIG
 from utils.ai.gemini_ai import gemini_ai
-from utils.discord_helpers.embed_helpers import create_ai_response_embed, create_gaming_embed, send_ai_response, send_long_response
+from utils.discord_helpers.embed_helpers import send_ai_response
 from utils.ai.smart_response import SmartResponseManager
 from utils.data_management.rgpd_conversation_memory import rgpd_conversation_memory
 from utils.discord_helpers.rgpd_consent_ui import show_consent_request
-from utils.discord_helpers.gaming_helpers import gaming_helpers
 
 # Configuration du bot
 intents = discord.Intents.default()
@@ -35,8 +34,8 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    print(f"[DEBUG] on_message triggered: author={message.author}, content='{message.content}'")
     """Gestionnaire pour les mentions directes du bot"""
+    print(f"[DEBUG] on_message triggered: author={message.author}, content='{message.content}'")
     # Ignorer les messages du bot lui-même
     if message.author == bot.user:
         return
@@ -57,7 +56,7 @@ async def on_message(message):
             try:
                 if gemini_ai.is_available():
                     # Vérifier le consentement RGPD
-                    has_consent, consent_data = rgpd_conversation_memory.check_user_consent(message.author.id)
+                    has_consent, _ = rgpd_conversation_memory.check_user_consent(message.author.id)
                     
                     # Si pas de consentement, vérifier si on doit demander ou traiter sans mémoire
                     if not has_consent:

@@ -12,7 +12,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'utils'))
 from config import GAMES
 from utils.discord_helpers.gaming_helpers import gaming_helpers
 from utils.ai.gemini_ai import gemini_ai
-from utils.discord_helpers.embed_helpers import create_ai_response_embed, create_gaming_embed, create_help_embed, create_status_embed, send_ai_response, send_long_response
+from utils.discord_helpers.embed_helpers import create_ai_response_embed, create_gaming_embed, create_help_embed, create_status_embed
 
 class AIGaming(commands.Cog):
     """
@@ -57,7 +57,7 @@ class AIGaming(commands.Cog):
             return
         
         # Détecter le contexte de jeu dans le message
-        game_id, game_data = gaming_helpers.parse_game_from_message(question)
+        _, game_data = gaming_helpers.parse_game_from_message(question)
         game_context = game_data['name'] if game_data else None
         
         # Message de traitement avec embed stylé
@@ -119,7 +119,7 @@ class AIGaming(commands.Cog):
             return
         
         # Détecter le jeu
-        game_id, game_data = gaming_helpers.parse_game_from_message(f"{game} {description}")
+        _, game_data = gaming_helpers.parse_game_from_message(f"{game} {description}")
         
         # Embed de traitement
         thinking_embed = create_gaming_embed(
@@ -176,7 +176,7 @@ class AIGaming(commands.Cog):
             return
         
         # Détecter le jeu
-        game_id, game_data = gaming_helpers.parse_game_from_message(f"{game} {activity}")
+        _, game_data = gaming_helpers.parse_game_from_message(f"{game} {activity}")
         
         # Embed de traitement
         thinking_embed = create_gaming_embed(
@@ -228,7 +228,7 @@ class AIGaming(commands.Cog):
             return
         
         # Détecter le jeu
-        game_id, game_data = gaming_helpers.parse_game_from_message(f"{game} {event_type}")
+        _, game_data = gaming_helpers.parse_game_from_message(f"{game} {event_type}")
         
         # Embed de traitement
         thinking_embed = create_gaming_embed(

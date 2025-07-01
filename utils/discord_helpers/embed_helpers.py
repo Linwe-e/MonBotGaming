@@ -161,6 +161,17 @@ async def send_long_response(target: Union[discord.Message, discord.Interaction]
                 else:
                     await target.response.send_message(truncated)
                     
+    except discord.HTTPException as e:
+        print(f"Erreur Discord lors de l'envoi de la réponse longue: {e}")
+        error_msg = "❌ Une erreur de communication Discord s'est produite."
+        try:
+            is_message = isinstance(target, discord.Message)
+            if is_message:
+                await target.reply(error_msg)
+            else:
+                await target.response.send_message(error_msg)
+        except discord.HTTPException:
+            pass
     except Exception as e:
         print(f"Erreur lors de l'envoi de la réponse longue: {e}")
         error_msg = "❌ Une erreur s'est produite lors de l'envoi de la réponse."
@@ -170,7 +181,7 @@ async def send_long_response(target: Union[discord.Message, discord.Interaction]
                 await target.reply(error_msg)
             else:
                 await target.response.send_message(error_msg)
-        except:
+        except discord.HTTPException:
             pass
 
 async def send_ai_response(target: Union[discord.Message, discord.Interaction],
@@ -216,7 +227,7 @@ async def send_ai_response(target: Union[discord.Message, discord.Interaction],
                 await target.reply(error_msg)
             else:
                 await target.response.send_message(error_msg)
-        except:
+        except discord.HTTPException:
             pass
 
 def truncate_response(response: str, max_length: int = 1000, add_ellipsis: bool = True) -> str:
