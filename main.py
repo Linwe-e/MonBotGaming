@@ -13,8 +13,8 @@ load_dotenv()
 
 # Importer nos configurations et utilitaires
 from config import BOT_CONFIG, GAMES
-from utils.database import db
-print(f"DEBUG: sys.path before gaming_helpers import: {sys.path}")
+
+
 from utils.discord_helpers.gaming_helpers import gaming_helpers
 
 # Configuration du bot

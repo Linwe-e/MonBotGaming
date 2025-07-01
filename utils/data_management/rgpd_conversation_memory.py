@@ -216,7 +216,7 @@ Répondez `!privacy accept {duration}` ou `!privacy decline`"""
         for hashed_id in list(self.conversations.keys()):
             if hashed_id in self.user_consents:
                 consent_data = self.user_consents[hashed_id]
-                hours_limit = consent_data.get('memory_duration_hours', self.default_memory_duration_hours)
+                hours_limit = 48 # On nettoie les messages de plus de 48h
                 cutoff = datetime.now() - timedelta(hours=hours_limit)
                 
                 # Filtrer les messages récents
